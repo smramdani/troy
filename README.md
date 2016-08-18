@@ -1,8 +1,15 @@
 # What is Troy?
 
-Scala wrapper for Cassandra Java client, that focuses on
-  1. Leveraging full power of CQL, while retaining full type safety.
-  2. Ease of use, less biolerplate, minimizing learning curve.
+Type-safe & compile-time-checked wrapper around the Cassandra driver. That allows you to write raw CQL queries like:
+```
+cql"SELECT post_id, post_title FROM test.posts WHERE author_id = $authorId".prepared.as(Post)
+```
+Validating them against your schema (defined under `resource/schema.cql`), and showing errors at *compile-time* like:
+> Main.scala:15: Column 'ops_typo' not found in table 'test.posts'
+OR 
+> Main.scala:15: Incompatible column type Int <--> troy.driver.CassandraDataType.Text
+
+Check our [examples](examples) for more usecases. 
 
 ## How to use
 
@@ -49,21 +56,20 @@ val listByAuthor = withSchema {
 
 val results: Future[Seq[Post]] = listByAuthor("test")
 ```
-Check under "examples" directory for more use-cases.
-
-Using Scala `macro`, Troy will
-
+Now Troy will
   1. Validate the Select query against the schema, if you are asking for columns that doesn't exists, *your code won't compile*
-  2. Rewrite your code something that converts from a Cassandra Row into an instance if your class
+  2. Manages parsing Cassandra `Row` into an instance of the class you provided. 
 
 ## Compile-time Codec registery
-Since Troy knows the schema at compile time, so your queires will be use lower level methods, that allow specificing the codec, looks like `row.getString(1, theCorrectCodecInstance)`, this should minimize the work to be done at runtime.
-
-Resolving of the correct codec has been done at Compile time rather that Runtime. This is also plugable, using Type Classes, you can define you own `HasCodec` instance that maps any Cassandra type to your custom classes, and the compile will pick your codec instead.
+Troy wraps Cassandra's codecs in Typeclasses, to allow picking the correct codec at compile-time, rather than runtime.
+This is also extensible, by defining an implicit `HasTypeCodec[YourType, CassandraType]`.
 
 ### Optional columns
-Since Cassandra every column is optional, even if it is part of the primary key!
-We have built-in handling for `Option`, saving you from `null`s and `NPE`.
+Troy handles optional values automically, by wrapping Cassandra's codec with `null` checking. 
+All you need to do is define your classes to contain `Option[T]` like.
+```
+case class Post(id: UUID, title: Option[String])
+``` 
 
 ## CQL Syntax
 Troy targets (but not fully implements) CQL v3.4.3

@@ -2,7 +2,8 @@ package troy.cql.parser.ddl
 
 import org.scalatest.{ FlatSpec, Matchers }
 import troy.cql.ast.ddl.Index
-import troy.cql.ast.{ Constant, CqlParser, CreateIndex }
+import troy.cql.ast.{ Constant, CreateIndex }
+import troy.cql.parser.ParserTestUtils.parseSchemaAs
 
 class CreateIndexParserTest extends FlatSpec with Matchers {
   "Create Index Parser" should "parse create index" in {
@@ -54,15 +55,4 @@ class CreateIndexParserTest extends FlatSpec with Matchers {
     stmt5.using.get.options.get.pairs.size shouldBe 1
     stmt5.using.get.options.get.pairs(0) shouldBe Constant("storage") -> Constant("/mnt/ssd/indexes/")
   }
-
-  def parseSchema(statement: String) =
-    CqlParser.parseSchema(statement) match {
-      case CqlParser.Success(res, _)    => res
-      case CqlParser.Failure(msg, next) => fail(s"Parse Failure: $msg, line = ${next.pos.line}, column = ${next.pos.column}")
-    }
-
-  def parseSchemaAs[T](statement: String) =
-    parseSchema(statement)
-      .head
-      .asInstanceOf[T]
 }

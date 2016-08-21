@@ -2,7 +2,8 @@ package troy.cql.parser.ddl
 
 import org.scalatest._
 import troy.cql.ast.ddl.Table
-import troy.cql.ast.{ CqlParser, CreateTable, DataType }
+import troy.cql.ast.{ CreateTable, DataType }
+import troy.cql.parser.ParserTestUtils.parseSchemaAs
 
 class CreateTableParserTest extends FlatSpec with Matchers {
   "Create Table Parser" should "parse simple create table" in {
@@ -92,15 +93,4 @@ class CreateTableParserTest extends FlatSpec with Matchers {
     pk("((author_id, author_name), post_id, post_title)") shouldBe Table.PrimaryKey(Seq("author_id", "author_name"), Seq("post_id", "post_title"))
     pk("(author_id, post_id, post_title)") shouldBe Table.PrimaryKey(Seq("author_id"), Seq("post_id", "post_title"))
   }
-
-  def parseSchema(statement: String) =
-    CqlParser.parseSchema(statement) match {
-      case CqlParser.Success(res, _)    => res
-      case CqlParser.Failure(msg, next) => fail(s"Parse Failure: $msg, line = ${next.pos.line}, column = ${next.pos.column}")
-    }
-
-  def parseSchemaAs[T](statement: String) =
-    parseSchema(statement)
-      .head
-      .asInstanceOf[T]
 }

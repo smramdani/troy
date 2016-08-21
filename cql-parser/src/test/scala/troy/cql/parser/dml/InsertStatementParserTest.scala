@@ -3,6 +3,7 @@ package troy.cql.parser.dml
 import org.scalatest.{ FlatSpec, Matchers }
 import troy.cql.ast.dml.{ Insert, Timestamp, Ttl, UpdateValue }
 import troy.cql.ast._
+import troy.cql.parser.ParserTestUtils.parseQuery
 
 class InsertStatementParserTest extends FlatSpec with Matchers {
 
@@ -141,10 +142,5 @@ class InsertStatementParserTest extends FlatSpec with Matchers {
     statement.ifNotExists shouldBe false
     statement.using.isEmpty shouldBe true
   }
-  def parseQuery(statement: String) =
-    CqlParser
-      .parseDML(statement) match {
-        case CqlParser.Success(res, _)    => res
-        case CqlParser.Failure(msg, next) => fail(s"Parse Failure: $msg, line = ${next.pos.line}, column = ${next.pos.column}")
-      }
+
 }

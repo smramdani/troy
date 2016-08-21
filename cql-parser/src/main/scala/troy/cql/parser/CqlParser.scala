@@ -21,7 +21,6 @@ import troy.cql.ast.dml.{ UpdateParam, UpdateParamValue, UpdateVariable }
 import troy.cql.parser.{ Helpers, TermParser }
 import troy.cql.parser.dml.{ DeleteStatementParser, InsertStatementParser, SelectStatementParser }
 import troy.cql.parser.ddl.{ CreateKeyspaceParser, CreateTableParser, CreateIndexParser }
-import troy.cql.ast.ddl.KeyspaceName
 import scala.util.parsing.combinator._
 
 // Based on CQLv3.4.3: https://cassandra.apache.org/doc/latest/cql/index.html

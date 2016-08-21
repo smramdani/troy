@@ -18,7 +18,8 @@ package troy.cql.parser
 
 import org.scalatest._
 import troy.cql.ast._
-import troy.cql.ast.ddl.{ Keyspace, KeyspaceName, Table }
+import troy.cql.ast.ddl.{ Keyspace, Table }
+import troy.cql.parser.ParserTestUtils.parseSchema
 
 class CqlParserTest extends FlatSpec with Matchers {
 
@@ -50,15 +51,4 @@ class CqlParserTest extends FlatSpec with Matchers {
     )
 
   }
-
-  def parseSchema(statement: String) =
-    CqlParser.parseSchema(statement) match {
-      case CqlParser.Success(res, _)    => res
-      case CqlParser.Failure(msg, next) => fail(s"Parse Failure: $msg, line = ${next.pos.line}, column = ${next.pos.column}")
-    }
-
-  def parseSchemaAs[T](statement: String) =
-    parseSchema(statement)
-      .head
-      .asInstanceOf[T]
 }

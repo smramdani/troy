@@ -1,8 +1,9 @@
 package troy.cql.parser.ddl
 
 import org.scalatest._
-import troy.cql.ast.{ CqlParser, CreateKeyspace }
+import troy.cql.ast.CreateKeyspace
 import troy.cql.ast.ddl.Keyspace
+import troy.cql.parser.ParserTestUtils.parseSchemaAs
 
 class CreateKeyspaceParserTest extends FlatSpec with Matchers {
 
@@ -13,15 +14,4 @@ class CreateKeyspaceParserTest extends FlatSpec with Matchers {
     statement.keyspaceName.name shouldBe "test"
     statement.properties shouldBe Seq(Keyspace.Replication(Seq(("class", "SimpleStrategy"), ("replication_factor", "1"))))
   }
-
-  def parseSchema(statement: String) =
-    CqlParser.parseSchema(statement) match {
-      case CqlParser.Success(res, _)    => res
-      case CqlParser.Failure(msg, next) => fail(s"Parse Failure: $msg, line = ${next.pos.line}, column = ${next.pos.column}")
-    }
-
-  def parseSchemaAs[T](statement: String) =
-    parseSchema(statement)
-      .head
-      .asInstanceOf[T]
 }

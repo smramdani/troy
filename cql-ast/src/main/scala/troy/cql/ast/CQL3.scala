@@ -16,8 +16,6 @@
 
 package troy.cql.ast
 
-import troy.cql.ast.ddl.KeyspaceName
-
 //
 //trait SchemaAlteringStatement
 
@@ -41,6 +39,8 @@ object ConsistencyLevel {
   case object LocalQuorum extends ConsistencyLevel
   case object EachQuorum extends ConsistencyLevel
 }
+
+case class KeyspaceName(name: String)
 
 case class TableName(keyspace: Option[KeyspaceName], table: String) {
   override def toString = keyspace.map(_.name + ".").getOrElse("") + table

@@ -1,7 +1,6 @@
 package troy.cql.ast.dml
 
-import troy.cql.ast.{ BindMarker, DataType, Term, TupleLiteral, _ }
-import troy.cql.ast.dml.WhereClause
+import troy.cql.ast.{ BindMarker, DataType, Term, _ }
 
 object Select {
   sealed trait Mod

@@ -25,21 +25,21 @@ class SchemaValidationTest extends FlatSpec with Matchers {
 
   "Schema" should "fetch fields" in {
 
-    val authorId = CreateTable.Column("author_id", DataType.text, false, false)
-    val authorName = CreateTable.Column("author_name", DataType.text, true, false)
-    val authorAge = CreateTable.Column("author_age", DataType.int, true, false)
-    val postId = CreateTable.Column("post_id", DataType.text, false, false)
-    val postTitle = CreateTable.Column("post_title", DataType.text, false, false)
+    val authorId = Table.Column("author_id", DataType.text, false, false)
+    val authorName = Table.Column("author_name", DataType.text, true, false)
+    val authorAge = Table.Column("author_age", DataType.int, true, false)
+    val postId = Table.Column("post_id", DataType.text, false, false)
+    val postTitle = Table.Column("post_title", DataType.text, false, false)
 
     val schema = Schema(Seq(
-      CreateKeyspace(false, KeyspaceName("test"), Seq(CreateKeyspace.Replication(Seq(("class", "SimpleStrategy"), ("replication_factor", "1"))))),
+      CreateKeyspace(false, KeyspaceName("test"), Seq(Keyspace.Replication(Seq(("class", "SimpleStrategy"), ("replication_factor", "1"))))),
       CreateTable(false, TableName(Some(KeyspaceName("test")), "posts"), Seq(
         authorId,
         authorName,
         authorAge,
         postId,
         postTitle
-      ), Some(CreateTable.PrimaryKey(Seq("author_id"), Seq("post_id"))), Nil)
+      ), Some(Table.PrimaryKey(Seq("author_id"), Seq("post_id"))), Nil)
     )).right.get
 
     schema(select(table("test", "posts"), "author_id", "author_name", "author_age", "post_id", "post_title"))
@@ -54,5 +54,5 @@ class SchemaValidationTest extends FlatSpec with Matchers {
     SelectStatement(None, SelectClause(sci), table, None, None, None, None, false)
   }
 
-  def types(columns: CreateTable.Column*) = Schema.Columns(columns.map(_.dataType))
+  def types(columns: Table.Column*) = Schema.Columns(columns.map(_.dataType))
 }

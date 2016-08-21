@@ -16,7 +16,7 @@
 
 package troy.cql.ast
 
-import troy.cql.ast.CreateIndex.IndexIdentifier
+import troy.cql.ast.Index.IndexIdentifier
 import troy.cql.ast._
 import troy.cql.ast.dml._
 import troy.cql.ast.dml.{ UpdateParam, UpdateParamValue, UpdateVariable }
@@ -41,7 +41,7 @@ object CqlParser extends JavaTokenParsers with Helpers with TermParser with Sele
     createKeyspace | createTable | createIndex
 
   def createKeyspace: Parser[CreateKeyspace] = {
-    import CreateKeyspace._
+    import Keyspace._
     val mapKey: Parser[String] = "'" ~> identifier <~ "'"
     val mapValue: Parser[String] = "'" ~> identifier <~ "'"
     val mapKeyValue = mapKey ~ (":" ~> mapValue) ^^ { case k ~ v => k -> v }
@@ -62,7 +62,7 @@ object CqlParser extends JavaTokenParsers with Helpers with TermParser with Sele
   def dropKeyspace: Parser[Cql3Statement] = ??? // <drop-keyspace-stmt> ::= DROP KEYSPACE ( IF EXISTS )? <identifier>
 
   def createTable: Parser[CreateTable] = {
-    import CreateTable._
+    import Table._
 
     def createTable = "create".i ~> ("table".i | "columnfamily".i)
 
@@ -89,7 +89,7 @@ object CqlParser extends JavaTokenParsers with Helpers with TermParser with Sele
   }
 
   def createIndex: Parser[CreateIndex] = {
-    import CreateIndex._
+    import Index._
 
     def indexName = identifier.?
     def onTable = "ON".i ~> tableName

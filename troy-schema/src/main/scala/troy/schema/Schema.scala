@@ -104,7 +104,7 @@ case class SchemaImpl(schema: Map[KeyspaceName, Seq[CreateTable]], context: Opti
       ).right
     } yield bindableColumns.map(_.dataType)
 
-  private def apply(table: TableName, columns: Seq[String]): Result[Seq[CreateTable.Column]] =
+  private def apply(table: TableName, columns: Seq[String]): Result[Seq[Table.Column]] =
     getColumns(table.keyspace, table.table, columns)
 
   private def resolveKeyspaceName(keyspaceName: Option[KeyspaceName]): Result[KeyspaceName] =
@@ -131,25 +131,25 @@ case class SchemaImpl(schema: Map[KeyspaceName, Seq[CreateTable]], context: Opti
       table <- getTable(tables, tableName).right
     } yield table
 
-  private def getColumn(table: CreateTable, columnName: Select.ColumnName): Result[CreateTable.Column] =
+  private def getColumn(table: CreateTable, columnName: Select.ColumnName): Result[Table.Column] =
     getColumn(table, columnName.name)
 
-  private def getColumn(table: CreateTable, columnName: String): Result[CreateTable.Column] =
+  private def getColumn(table: CreateTable, columnName: String): Result[Table.Column] =
     table.columns.find(_.name == columnName).toRight(s"Column '$columnName' not found in table '${table.tableName}'")
 
-  private def getColumns(table: CreateTable, columnNames: Seq[String]): Result[Seq[CreateTable.Column]] =
+  private def getColumns(table: CreateTable, columnNames: Seq[String]): Result[Seq[Table.Column]] =
     Result.seq(columnNames.map(getColumn(table, _)))
 
-  def getColumns(keyspaceName: Option[KeyspaceName], table: String, selectColumns: Seq[String]): Result[Seq[CreateTable.Column]] =
+  def getColumns(keyspaceName: Option[KeyspaceName], table: String, selectColumns: Seq[String]): Result[Seq[Table.Column]] =
     for {
       table <- getTable(keyspaceName, table).right
       columns <- getColumns(table, selectColumns).right
     } yield columns
 
-  private def getAllColumns(table: TableName): Result[Set[CreateTable.Column]] =
+  private def getAllColumns(table: TableName): Result[Set[Table.Column]] =
     getAllColumns(table.keyspace, table.table)
 
-  private def getAllColumns(keyspaceName: Option[KeyspaceName], table: String): Result[Set[CreateTable.Column]] =
+  private def getAllColumns(keyspaceName: Option[KeyspaceName], table: String): Result[Set[Table.Column]] =
     for {
       table <- getTable(keyspaceName, table).right
     } yield table.columns.toSet
@@ -188,7 +188,7 @@ object Schema {
   case class Asterisk(types: Set[DataType]) extends RowType
   case class Columns(types: Seq[DataType]) extends RowType
   object RowType {
-    def fromColumns(columns: Seq[CreateTable.Column]): Columns =
+    def fromColumns(columns: Seq[Table.Column]): Columns =
       Columns(columns.map(_.dataType))
   }
 

@@ -16,30 +16,15 @@
 
 package troy.cql.ast
 
-trait DataDefinition
-
-case class CreateKeyspace(
-  ifNotExists: Boolean,
-  keyspaceName: KeyspaceName,
-  properties: Seq[CreateKeyspace.KeyspaceOption]
-) extends DataDefinition
-object CreateKeyspace {
+object Keyspace {
   trait KeyspaceOption
   case class Replication(options: Seq[(String, String)]) extends KeyspaceOption // TODO
 }
 
-case class UseStatement(keyspaceName: KeyspaceName) extends DataDefinition
 //
 //trait SchemaAlteringStatement
-case class CreateTable(
-  ifNotExists: Boolean,
-  tableName: TableName,
-  columns: Seq[CreateTable.Column],
-  primaryKey: Option[CreateTable.PrimaryKey],
-  options: Seq[CreateTable.CreateTableOption]
-) extends DataDefinition
 
-object CreateTable {
+object Table {
   case class Column(name: String, dataType: DataType, isStatic: Boolean, isPrimaryKey: Boolean)
   case class PrimaryKey(partitionKeys: Seq[String], clusteringColumns: Seq[String])
 
@@ -49,16 +34,7 @@ object CreateTable {
   case object ClusteringOrder extends CreateTableOption
 }
 
-case class CreateIndex(
-  isCustom: Boolean,
-  ifNotExists: Boolean,
-  indexName: Option[String],
-  tableName: TableName,
-  identifier: CreateIndex.IndexIdentifier,
-  using: Option[CreateIndex.Using]
-) extends DataDefinition
-
-object CreateIndex {
+object Index {
   case class Using(using: String, options: Option[MapLiteral])
 
   trait IndexIdentifier

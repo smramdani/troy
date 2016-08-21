@@ -20,7 +20,7 @@ import troy.cql.ast._
 import org.scalatest._
 import troy.cql.ast.dml.Select
 import troy.cql.ast.SelectStatement
-import troy.cql.ast.ddl.{ Keyspace, KeyspaceName }
+import troy.cql.ast.ddl._
 
 class SchemaValidationTest extends FlatSpec with Matchers {
 

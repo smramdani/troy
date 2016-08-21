@@ -21,16 +21,6 @@ import troy.cql.ast.ddl.KeyspaceName
 //
 //trait SchemaAlteringStatement
 
-object Table {
-  case class Column(name: String, dataType: DataType, isStatic: Boolean, isPrimaryKey: Boolean)
-  case class PrimaryKey(partitionKeys: Seq[String], clusteringColumns: Seq[String])
-
-  trait CreateTableOption
-  case class Property() extends CreateTableOption
-  case object CompactStorage extends CreateTableOption
-  case object ClusteringOrder extends CreateTableOption
-}
-
 object Index {
   case class Using(using: String, options: Option[MapLiteral])
 

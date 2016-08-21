@@ -18,23 +18,11 @@ package troy.cql.parser
 
 import org.scalatest._
 import troy.cql.ast._
-import troy.cql.ast.ddl.{ Keyspace, KeyspaceName }
+import troy.cql.ast.ddl.{ Keyspace, KeyspaceName, Table }
 
 class CqlParserTest extends FlatSpec with Matchers {
 
-  "Cql Parser" should "parse simple create table" in {
-    val statement = parseSchemaAs[CreateTable]("CREATE TABLE test.posts (author_id text PRIMARY KEY);")
-    statement.ifNotExists shouldBe false
-    statement.tableName.keyspace.get.name shouldBe "test"
-    statement.tableName.table shouldBe "posts"
-    statement.columns.size shouldBe 1
-    statement.columns.head.dataType shouldBe DataType.text
-    statement.columns.head.isPrimaryKey shouldBe true
-    statement.columns.head.isStatic shouldBe false
-    statement.columns.head.name shouldBe "author_id"
-  }
-
-  it should "parse create index" in {
+  "Cql Parser" should "parse create index" in {
     val stmt1 = parseSchemaAs[CreateIndex]("CREATE INDEX userIndex ON NerdMovies (user);")
     stmt1.isCustom shouldBe false
     stmt1.ifNotExists shouldBe false

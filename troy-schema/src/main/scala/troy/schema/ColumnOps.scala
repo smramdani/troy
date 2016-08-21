@@ -1,6 +1,7 @@
 package troy.schema
 
-import troy.cql.ast.{ DataType, Table }
+import troy.cql.ast.DataType
+import troy.cql.ast.ddl.Table
 import troy.cql.ast.dml.Operator
 
 object ColumnOps {

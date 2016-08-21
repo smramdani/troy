@@ -3,9 +3,9 @@ package troy.cql.ast
 import troy.cql.ast.dml._
 import troy.cql.ast.ddl._
 
-sealed trait DataDefinition
-sealed trait DataManipulation
 sealed trait Cql3Statement
+sealed trait DataDefinition extends Cql3Statement
+sealed trait DataManipulation extends Cql3Statement
 
 case class DeleteStatement(
   simpleSelection: Option[Seq[SimpleSelection]],

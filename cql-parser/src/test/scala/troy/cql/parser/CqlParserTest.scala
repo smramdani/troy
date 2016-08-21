@@ -18,7 +18,7 @@ package troy.cql.parser
 
 import org.scalatest._
 import troy.cql.ast._
-import troy.cql.ast.dml.SelectStatement
+import troy.cql.ast.dml.Select
 
 class CqlParserTest extends FlatSpec with Matchers {
 

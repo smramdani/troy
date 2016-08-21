@@ -1,7 +1,7 @@
 package troy.cql.parser.dml
 
 import org.scalatest.{ FlatSpec, Matchers }
-import troy.cql.ast.dml.{ InsertStatement, Timestamp, Ttl, UpdateValue }
+import troy.cql.ast.dml.{ Insert, Timestamp, Ttl, UpdateValue }
 import troy.cql.ast._
 import org.scalatest._
 
@@ -11,7 +11,7 @@ class InsertStatementParserTest extends FlatSpec with Matchers {
     val statement = parseQuery("INSERT INTO NerdMovies (movie, director, main_actor, year) VALUES ('Serenity', 'Joss Whedon', 'Nathan Fillion', 2005);").asInstanceOf[InsertStatement]
     statement.into.table shouldBe "NerdMovies"
 
-    val insertClause = statement.insertClause.asInstanceOf[InsertStatement.NamesValues]
+    val insertClause = statement.insertClause.asInstanceOf[Insert.NamesValues]
     val names: Seq[Identifier] = insertClause.columnNames
     names.size shouldBe 4
     names(0) shouldBe "movie"
@@ -34,7 +34,7 @@ class InsertStatementParserTest extends FlatSpec with Matchers {
     val statement = parseQuery("INSERT INTO NerdMovies (movie, director, main_actor, year) VALUES ('Serenity', 'Joss Whedon', 'Nathan Fillion', 2005) IF NOT EXISTS ;").asInstanceOf[InsertStatement]
     statement.into.table shouldBe "NerdMovies"
 
-    val insertClause = statement.insertClause.asInstanceOf[InsertStatement.NamesValues]
+    val insertClause = statement.insertClause.asInstanceOf[Insert.NamesValues]
     val names: Seq[Identifier] = insertClause.columnNames
     names.size shouldBe 4
     names(0) shouldBe "movie"
@@ -57,7 +57,7 @@ class InsertStatementParserTest extends FlatSpec with Matchers {
     val statement = parseQuery("INSERT INTO NerdMovies (movie, director, main_actor, year) VALUES ('Serenity', 'Joss Whedon', 'Nathan Fillion', 2005) USING TTL 86400;").asInstanceOf[InsertStatement]
     statement.into.table shouldBe "NerdMovies"
 
-    val insertClause = statement.insertClause.asInstanceOf[InsertStatement.NamesValues]
+    val insertClause = statement.insertClause.asInstanceOf[Insert.NamesValues]
     val names: Seq[Identifier] = insertClause.columnNames
     names.size shouldBe 4
     names(0) shouldBe "movie"
@@ -84,7 +84,7 @@ class InsertStatementParserTest extends FlatSpec with Matchers {
     val statement = parseQuery("INSERT INTO NerdMovies (movie, director, main_actor, year) VALUES ('Serenity', 'Joss Whedon', 'Nathan Fillion', 2005) USING TIMESTAMP 86400;").asInstanceOf[InsertStatement]
     statement.into.table shouldBe "NerdMovies"
 
-    val insertClause = statement.insertClause.asInstanceOf[InsertStatement.NamesValues]
+    val insertClause = statement.insertClause.asInstanceOf[Insert.NamesValues]
     val names: Seq[Identifier] = insertClause.columnNames
     names.size shouldBe 4
     names(0) shouldBe "movie"
@@ -111,7 +111,7 @@ class InsertStatementParserTest extends FlatSpec with Matchers {
     val statement = parseQuery("INSERT INTO NerdMovies JSON '{\"movie\": \"Serenity\", \"director\": \"Joss Whedon\", \"year\": 2005}';").asInstanceOf[InsertStatement]
     statement.into.table shouldBe "NerdMovies"
 
-    val insertClause = statement.insertClause.asInstanceOf[InsertStatement.JsonClause]
+    val insertClause = statement.insertClause.asInstanceOf[Insert.JsonClause]
     insertClause.value shouldBe "{\"movie\": \"Serenity\", \"director\": \"Joss Whedon\", \"year\": 2005}"
     insertClause.default.isEmpty shouldBe true
 
@@ -123,10 +123,10 @@ class InsertStatementParserTest extends FlatSpec with Matchers {
     val statement = parseQuery("INSERT INTO NerdMovies JSON '{\"movie\": \"Serenity\", \"director\": \"Joss Whedon\", \"year\": 2005}' DEFAULT NULL;").asInstanceOf[InsertStatement]
     statement.into.table shouldBe "NerdMovies"
 
-    val insertClause = statement.insertClause.asInstanceOf[InsertStatement.JsonClause]
+    val insertClause = statement.insertClause.asInstanceOf[Insert.JsonClause]
     insertClause.value shouldBe "{\"movie\": \"Serenity\", \"director\": \"Joss Whedon\", \"year\": 2005}"
     insertClause.default.isDefined shouldBe true
-    insertClause.default.get shouldBe InsertStatement.NullValue
+    insertClause.default.get shouldBe Insert.NullValue
     statement.ifNotExists shouldBe false
     statement.using.isEmpty shouldBe true
   }
@@ -135,10 +135,10 @@ class InsertStatementParserTest extends FlatSpec with Matchers {
     val statement = parseQuery("INSERT INTO NerdMovies JSON '{\"movie\": \"Serenity\", \"director\": \"Joss Whedon\", \"year\": 2005}' DEFAULT UNSET;").asInstanceOf[InsertStatement]
     statement.into.table shouldBe "NerdMovies"
 
-    val insertClause = statement.insertClause.asInstanceOf[InsertStatement.JsonClause]
+    val insertClause = statement.insertClause.asInstanceOf[Insert.JsonClause]
     insertClause.value shouldBe "{\"movie\": \"Serenity\", \"director\": \"Joss Whedon\", \"year\": 2005}"
     insertClause.default.isDefined shouldBe true
-    insertClause.default.get shouldBe InsertStatement.Unset
+    insertClause.default.get shouldBe Insert.Unset
     statement.ifNotExists shouldBe false
     statement.using.isEmpty shouldBe true
   }

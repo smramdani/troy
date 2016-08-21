@@ -1,10 +1,11 @@
 package troy.cql.parser.dml
 
 import org.scalatest.{ FlatSpec, Matchers }
-import troy.cql.ast.dml.DeleteStatement.{ Exist, SimpleIfCondition }
+import troy.cql.ast.dml.Delete.{ Exist, SimpleIfCondition }
 import troy.cql.ast.{ Constant, CqlParser, TupleLiteral }
 import troy.cql.ast.dml._
 import troy.cql.ast.dml.WhereClause.Relation.Simple
+import troy.cql.ast.DeleteStatement
 
 class DeleteStatementParserTest extends FlatSpec with Matchers {
   "Delete Parser" should "parse simple delete statement" in {

@@ -19,7 +19,7 @@ package troy.cql.ast
 import troy.cql.ast.CreateIndex.IndexIdentifier
 import troy.cql.ast._
 import troy.cql.ast.dml._
-import troy.cql.ast.dml.{ SelectStatement, UpdateParam, UpdateParamValue, UpdateVariable }
+import troy.cql.ast.dml.{ UpdateParam, UpdateParamValue, UpdateVariable }
 import troy.cql.parser.{ Helpers, TermParser }
 import troy.cql.parser.dml.{ DeleteStatementParser, InsertStatementParser, SelectStatementParser }
 

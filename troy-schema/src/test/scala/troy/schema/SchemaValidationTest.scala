@@ -18,7 +18,8 @@ package troy.schema
 
 import troy.cql.ast._
 import org.scalatest._
-import troy.cql.ast.dml.SelectStatement
+import troy.cql.ast.dml.Select
+import troy.cql.ast.SelectStatement
 
 class SchemaValidationTest extends FlatSpec with Matchers {
 
@@ -48,7 +49,7 @@ class SchemaValidationTest extends FlatSpec with Matchers {
   def table(keyspace: String, table: String) = TableName(Some(KeyspaceName(keyspace)), table)
 
   def select(table: TableName, columnNames: String*): SelectStatement = {
-    import SelectStatement._
+    import Select._
     val sci = columnNames.map(n => SelectionClauseItem(ColumnName(n), None))
     SelectStatement(None, SelectClause(sci), table, None, None, None, None, false)
   }

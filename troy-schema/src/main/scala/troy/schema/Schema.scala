@@ -50,12 +50,12 @@ case class SchemaImpl(schema: Map[KeyspaceName, Seq[CreateTable]], context: Opti
   private def validate(query: DataManipulation): Result[Unit] = success(())
 
   private def extractRowType(query: SelectStatement): Result[RowType] = query match {
-    case SelectStatement(_, SelectStatement.Asterisk, table, _, _, _, _, _) =>
+    case SelectStatement(_, Select.Asterisk, table, _, _, _, _, _) =>
       getAllColumns(table).right.map(cs => Asterisk(cs.map(_.dataType)))
-    case SelectStatement(_, SelectStatement.SelectClause(items), table, _, _, _, _, _) =>
+    case SelectStatement(_, Select.SelectClause(items), table, _, _, _, _, _) =>
       apply(table, items.map(_.selector).map {
-        case SelectStatement.ColumnName(name) => name
-        case _                                => ???
+        case Select.ColumnName(name) => name
+        case _                       => ???
       }).right.map(RowType.fromColumns)
   }
 
@@ -68,11 +68,11 @@ case class SchemaImpl(schema: Map[KeyspaceName, Seq[CreateTable]], context: Opti
     ))
 
   private def extractVariableTypes(statement: DataManipulation): Result[Seq[DataType]] = statement match {
-    case SelectStatement(_, _, from, Some(where), _, _, _, _)              => extractVariableTypes(from, where)
-    case SelectStatement(_, _, from, None, _, _, _, _)                     => success(Seq.empty)
-    case InsertStatement(table, clause: InsertStatement.NamesValues, _, _) => extractVariableTypes(table, clause)
-    case InsertStatement(table, clause: InsertStatement.JsonClause, _, _)  => success(Seq.empty)
-    case _                                                                 => ???
+    case SelectStatement(_, _, from, Some(where), _, _, _, _)     => extractVariableTypes(from, where)
+    case SelectStatement(_, _, from, None, _, _, _, _)            => success(Seq.empty)
+    case InsertStatement(table, clause: Insert.NamesValues, _, _) => extractVariableTypes(table, clause)
+    case InsertStatement(table, clause: Insert.JsonClause, _, _)  => success(Seq.empty)
+    case _                                                        => ???
   }
 
   private def extractVariableTypes(table: TableName, where: WhereClause): Result[Seq[DataType]] =
@@ -93,7 +93,7 @@ case class SchemaImpl(schema: Map[KeyspaceName, Seq[CreateTable]], context: Opti
       case WhereClause.Relation.Token(_, identifiers, _)  => ???
     })
 
-  private def extractVariableTypes(table: TableName, insertClause: InsertStatement.NamesValues): Result[Seq[DataType]] =
+  private def extractVariableTypes(table: TableName, insertClause: Insert.NamesValues): Result[Seq[DataType]] =
     for {
       table <- getTable(table).right
       bindableColumns <- getColumns(
@@ -131,7 +131,7 @@ case class SchemaImpl(schema: Map[KeyspaceName, Seq[CreateTable]], context: Opti
       table <- getTable(tables, tableName).right
     } yield table
 
-  private def getColumn(table: CreateTable, columnName: SelectStatement.ColumnName): Result[CreateTable.Column] =
+  private def getColumn(table: CreateTable, columnName: Select.ColumnName): Result[CreateTable.Column] =
     getColumn(table, columnName.name)
 
   private def getColumn(table: CreateTable, columnName: String): Result[CreateTable.Column] =

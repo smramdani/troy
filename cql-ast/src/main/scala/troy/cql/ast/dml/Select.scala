@@ -3,17 +3,7 @@ package troy.cql.ast.dml
 import troy.cql.ast.{ BindMarker, DataType, Term, TupleLiteral, _ }
 import troy.cql.ast.dml.WhereClause
 
-case class SelectStatement(
-  mod: Option[SelectStatement.Mod],
-  selection: SelectStatement.Selection,
-  from: TableName,
-  where: Option[WhereClause],
-  orderBy: Option[SelectStatement.OrderBy],
-  perPartitionLimit: Option[SelectStatement.LimitParam],
-  limit: Option[SelectStatement.LimitParam],
-  allowFiltering: Boolean
-) extends DataManipulation
-object SelectStatement {
+object Select {
   sealed trait Mod
   case object Json extends Mod
   case object Distinct extends Mod

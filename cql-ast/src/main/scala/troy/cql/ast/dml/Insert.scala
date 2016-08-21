@@ -2,13 +2,7 @@ package troy.cql.ast.dml
 
 import troy.cql.ast._
 
-case class InsertStatement(
-  into: TableName,
-  insertClause: InsertStatement.InsertClause,
-  ifNotExists: Boolean,
-  using: Option[Seq[UpdateParam]]
-) extends DataManipulation
-object InsertStatement {
+object Insert {
   sealed trait InsertClause
   case class NamesValues(columnNames: Seq[Identifier], values: TupleLiteral) extends InsertClause
   case class JsonClause(value: String, default: Option[Default]) extends InsertClause

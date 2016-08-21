@@ -1,6 +1,7 @@
 package troy.cql.ast
 
 import troy.cql.ast.dml._
+import troy.cql.ast.ddl._
 
 sealed trait DataDefinition
 sealed trait DataManipulation

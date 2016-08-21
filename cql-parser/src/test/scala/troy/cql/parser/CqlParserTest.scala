@@ -18,18 +18,11 @@ package troy.cql.parser
 
 import org.scalatest._
 import troy.cql.ast._
+import troy.cql.ast.ddl.{ Keyspace, KeyspaceName }
 
 class CqlParserTest extends FlatSpec with Matchers {
 
-  "Cql Parser" should "parse create keyspace" in {
-    val statement = parseSchemaAs[CreateKeyspace]("create KEYSPACE test WITH replication = {'class': 'SimpleStrategy' , 'replication_factor': '1'}; ")
-
-    statement.ifNotExists shouldBe false
-    statement.keyspaceName.name shouldBe "test"
-    statement.properties shouldBe Seq(Keyspace.Replication(Seq(("class", "SimpleStrategy"), ("replication_factor", "1"))))
-  }
-
-  it should "parse simple create table" in {
+  "Cql Parser" should "parse simple create table" in {
     val statement = parseSchemaAs[CreateTable]("CREATE TABLE test.posts (author_id text PRIMARY KEY);")
     statement.ifNotExists shouldBe false
     statement.tableName.keyspace.get.name shouldBe "test"

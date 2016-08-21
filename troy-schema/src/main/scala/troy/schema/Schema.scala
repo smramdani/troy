@@ -17,6 +17,7 @@
 package troy.schema
 
 import troy.cql.ast._
+import troy.cql.ast.ddl.KeyspaceName
 import troy.cql.ast.dml._
 
 import scala.util.Left

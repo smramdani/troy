@@ -20,11 +20,15 @@ import troy.cql.ast.dml._
 import troy.cql.ast.dml.{ UpdateParam, UpdateParamValue, UpdateVariable }
 import troy.cql.parser.{ Helpers, TermParser }
 import troy.cql.parser.dml.{ DeleteStatementParser, InsertStatementParser, SelectStatementParser }
-
+import troy.cql.parser.ddl.CreateKeyspaceParser
+import troy.cql.ast.ddl.KeyspaceName
 import scala.util.parsing.combinator._
 
 // Based on CQLv3.4.3: https://cassandra.apache.org/doc/latest/cql/index.html
-object CqlParser extends JavaTokenParsers with Helpers with TermParser with SelectStatementParser with InsertStatementParser with DeleteStatementParser {
+object CqlParser extends JavaTokenParsers
+    with Helpers with TermParser
+    with CreateKeyspaceParser
+    with SelectStatementParser with InsertStatementParser with DeleteStatementParser {
   def parseSchema(input: String): ParseResult[Seq[DataDefinition]] =
     parse(phrase(rep(dataDefinition <~ semicolon)), input)
 
@@ -37,21 +41,6 @@ object CqlParser extends JavaTokenParsers with Helpers with TermParser with Sele
   ////////////////////////////////////////// Data Definition
   def dataDefinition: Parser[DataDefinition] =
     createKeyspace | createTable | createIndex
-
-  def createKeyspace: Parser[CreateKeyspace] = {
-    import Keyspace._
-    val mapKey: Parser[String] = "'" ~> identifier <~ "'"
-    val mapValue: Parser[String] = "'" ~> identifier <~ "'"
-    val mapKeyValue = mapKey ~ (":" ~> mapValue) ^^ { case k ~ v => k -> v }
-    val map: Parser[Seq[(String, String)]] = curlyBraces(repsep(mapKeyValue, ","))
-    def option: Parser[KeyspaceOption] = ("replication".i ~> "=" ~> map) ^^ Replication
-    def withOptions: Parser[Seq[KeyspaceOption]] = ("WITH".i ~> rep1sep(option, "AND".i)) orEmpty
-
-    "CREATE KEYSPACE".i ~>
-      ifNotExists ~
-      keyspaceName ~
-      withOptions ^^^^ CreateKeyspace.apply // TODO: with properties   // <create-keyspace-stmt> ::= CREATE KEYSPACE (IF NOT EXISTS)? <identifier> WITH <properties>
-  }
 
   def use: Parser[UseStatement] = "use".i ~> keyspaceName ^^ UseStatement
 

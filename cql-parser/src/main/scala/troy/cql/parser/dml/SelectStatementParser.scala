@@ -1,9 +1,9 @@
 package troy.cql.parser.dml
 import troy.cql.ast.CqlParser._
-import troy.cql.ast.dml.SelectStatement
+import troy.cql.ast.dml.{ Operator, SelectStatement, WhereClause }
 import troy.cql.ast.dml.SelectStatement.OrderBy.{ Direction, Ordering }
-import troy.cql.ast.dml.SelectStatement.WhereClause.{ Operator, Relation }
-import troy.cql.ast.dml.SelectStatement.{ OrderBy, WhereClause, _ }
+import troy.cql.ast.dml.WhereClause.Relation
+import troy.cql.ast.dml.SelectStatement.{ OrderBy, _ }
 
 trait SelectStatementParser {
   def selectStatement: Parser[SelectStatement] = {
@@ -36,39 +36,6 @@ trait SelectStatementParser {
     }
 
     def from = "FROM" ~> tableName
-
-    def where: Parser[WhereClause] = {
-      import WhereClause._
-      def relation: Parser[Relation] = {
-        import Relation._
-
-        def op: Parser[Operator] = {
-          import Operator._
-          def eq = "=".r ^^^ Equals
-          def lt = "<".r ^^^ LessThan
-          def gt = ">".r ^^^ GreaterThan
-          def lte = "<=".r ^^^ LessThanOrEqual
-          def gte = ">=".r ^^^ GreaterThanOrEqual
-          def noteq = "!=".r ^^^ NotEquals
-          def in = "IN".r ^^^ In
-          def contains = "CONTAINS".i ^^^ Contains
-          def containsKey = "CONTAINS KEY".i ^^^ ContainsKey
-
-          lte | gte | eq | lt | gt | noteq | in | containsKey | contains
-        }
-
-        def columnName = identifier ^^ ColumnName
-        def columnNames = parenthesis(rep1sep(columnName, ","))
-
-        def simple = columnName ~ op ~ term ^^^^ Simple
-        def tupled = columnNames ~ op ~ tupleLiteral ^^^^ Tupled
-        def token = "TOKEN".i ~> columnNames ~ op ~ term ^^^^ Token
-
-        simple | tupled | token
-      }
-
-      "WHERE".i ~> rep1sep(relation, "AND".i) ^^ WhereClause.apply
-    }
 
     def limitParam: Parser[SelectStatement.LimitParam] = {
       def limitValue = Constants.integer ^^ LimitValue

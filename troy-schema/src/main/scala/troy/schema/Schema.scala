@@ -17,6 +17,7 @@
 package troy.schema
 
 import troy.cql.ast._
+import troy.cql.ast.ddl._
 import troy.cql.ast.dml._
 
 import scala.util.Left
@@ -50,12 +51,12 @@ case class SchemaImpl(schema: Map[KeyspaceName, Seq[CreateTable]], context: Opti
   private def validate(query: DataManipulation): Result[Unit] = success(())
 
   private def extractRowType(query: SelectStatement): Result[RowType] = query match {
-    case SelectStatement(_, SelectStatement.Asterisk, table, _, _, _, _, _) =>
+    case SelectStatement(_, Select.Asterisk, table, _, _, _, _, _) =>
       getAllColumns(table).right.map(cs => Asterisk(cs.map(_.dataType)))
-    case SelectStatement(_, SelectStatement.SelectClause(items), table, _, _, _, _, _) =>
+    case SelectStatement(_, Select.SelectClause(items), table, _, _, _, _, _) =>
       apply(table, items.map(_.selector).map {
-        case SelectStatement.ColumnName(name) => name
-        case _                                => ???
+        case Select.ColumnName(name) => name
+        case _                       => ???
       }).right.map(RowType.fromColumns)
   }
 
@@ -68,11 +69,11 @@ case class SchemaImpl(schema: Map[KeyspaceName, Seq[CreateTable]], context: Opti
     ))
 
   private def extractVariableTypes(statement: DataManipulation): Result[Seq[DataType]] = statement match {
-    case SelectStatement(_, _, from, Some(where), _, _, _, _)              => extractVariableTypes(from, where)
-    case SelectStatement(_, _, from, None, _, _, _, _)                     => success(Seq.empty)
-    case InsertStatement(table, clause: InsertStatement.NamesValues, _, _) => extractVariableTypes(table, clause)
-    case InsertStatement(table, clause: InsertStatement.JsonClause, _, _)  => success(Seq.empty)
-    case _                                                                 => ???
+    case SelectStatement(_, _, from, Some(where), _, _, _, _)     => extractVariableTypes(from, where)
+    case SelectStatement(_, _, from, None, _, _, _, _)            => success(Seq.empty)
+    case InsertStatement(table, clause: Insert.NamesValues, _, _) => extractVariableTypes(table, clause)
+    case InsertStatement(table, clause: Insert.JsonClause, _, _)  => success(Seq.empty)
+    case _                                                        => ???
   }
 
   private def extractVariableTypes(table: TableName, where: WhereClause): Result[Seq[DataType]] =
@@ -82,6 +83,7 @@ case class SchemaImpl(schema: Map[KeyspaceName, Seq[CreateTable]], context: Opti
     } yield dts
 
   private def extractVariableTypes(table: CreateTable, where: WhereClause): Result[Seq[DataType]] =
+    // TODO: Handel all the inputs
     Result.flattenSeq(where.relations.map {
       case WhereClause.Relation.Simple(columnName, op, BindMarker.Anonymous) =>
         import ColumnOps.Operations
@@ -93,7 +95,7 @@ case class SchemaImpl(schema: Map[KeyspaceName, Seq[CreateTable]], context: Opti
       case WhereClause.Relation.Token(_, identifiers, _)  => ???
     })
 
-  private def extractVariableTypes(table: TableName, insertClause: InsertStatement.NamesValues): Result[Seq[DataType]] =
+  private def extractVariableTypes(table: TableName, insertClause: Insert.NamesValues): Result[Seq[DataType]] =
     for {
       table <- getTable(table).right
       bindableColumns <- getColumns(
@@ -104,7 +106,7 @@ case class SchemaImpl(schema: Map[KeyspaceName, Seq[CreateTable]], context: Opti
       ).right
     } yield bindableColumns.map(_.dataType)
 
-  private def apply(table: TableName, columns: Seq[String]): Result[Seq[CreateTable.Column]] =
+  private def apply(table: TableName, columns: Seq[String]): Result[Seq[Table.Column]] =
     getColumns(table.keyspace, table.table, columns)
 
   private def resolveKeyspaceName(keyspaceName: Option[KeyspaceName]): Result[KeyspaceName] =
@@ -131,25 +133,25 @@ case class SchemaImpl(schema: Map[KeyspaceName, Seq[CreateTable]], context: Opti
       table <- getTable(tables, tableName).right
     } yield table
 
-  private def getColumn(table: CreateTable, columnName: SelectStatement.ColumnName): Result[CreateTable.Column] =
+  private def getColumn(table: CreateTable, columnName: Select.ColumnName): Result[Table.Column] =
     getColumn(table, columnName.name)
 
-  private def getColumn(table: CreateTable, columnName: String): Result[CreateTable.Column] =
+  private def getColumn(table: CreateTable, columnName: String): Result[Table.Column] =
     table.columns.find(_.name == columnName).toRight(s"Column '$columnName' not found in table '${table.tableName}'")
 
-  private def getColumns(table: CreateTable, columnNames: Seq[String]): Result[Seq[CreateTable.Column]] =
+  private def getColumns(table: CreateTable, columnNames: Seq[String]): Result[Seq[Table.Column]] =
     Result.seq(columnNames.map(getColumn(table, _)))
 
-  def getColumns(keyspaceName: Option[KeyspaceName], table: String, selectColumns: Seq[String]): Result[Seq[CreateTable.Column]] =
+  def getColumns(keyspaceName: Option[KeyspaceName], table: String, selectColumns: Seq[String]): Result[Seq[Table.Column]] =
     for {
       table <- getTable(keyspaceName, table).right
       columns <- getColumns(table, selectColumns).right
     } yield columns
 
-  private def getAllColumns(table: TableName): Result[Set[CreateTable.Column]] =
+  private def getAllColumns(table: TableName): Result[Set[Table.Column]] =
     getAllColumns(table.keyspace, table.table)
 
-  private def getAllColumns(keyspaceName: Option[KeyspaceName], table: String): Result[Set[CreateTable.Column]] =
+  private def getAllColumns(keyspaceName: Option[KeyspaceName], table: String): Result[Set[Table.Column]] =
     for {
       table <- getTable(keyspaceName, table).right
     } yield table.columns.toSet
@@ -188,7 +190,7 @@ object Schema {
   case class Asterisk(types: Set[DataType]) extends RowType
   case class Columns(types: Seq[DataType]) extends RowType
   object RowType {
-    def fromColumns(columns: Seq[CreateTable.Column]): Columns =
+    def fromColumns(columns: Seq[Table.Column]): Columns =
       Columns(columns.map(_.dataType))
   }
 

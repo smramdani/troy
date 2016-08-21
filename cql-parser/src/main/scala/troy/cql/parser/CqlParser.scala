@@ -16,17 +16,18 @@
 
 package troy.cql.ast
 
-import troy.cql.ast.CreateIndex.IndexIdentifier
-import troy.cql.ast._
 import troy.cql.ast.dml._
-import troy.cql.ast.dml.{ SelectStatement, UpdateParam, UpdateParamValue, UpdateVariable }
+import troy.cql.ast.dml.{ UpdateParam, UpdateParamValue, UpdateVariable }
 import troy.cql.parser.{ Helpers, TermParser }
 import troy.cql.parser.dml.{ DeleteStatementParser, InsertStatementParser, SelectStatementParser }
-
+import troy.cql.parser.ddl.{ CreateKeyspaceParser, CreateTableParser, CreateIndexParser }
 import scala.util.parsing.combinator._
 
 // Based on CQLv3.4.3: https://cassandra.apache.org/doc/latest/cql/index.html
-object CqlParser extends JavaTokenParsers with Helpers with TermParser with SelectStatementParser with InsertStatementParser with DeleteStatementParser {
+object CqlParser extends JavaTokenParsers
+    with Helpers with TermParser
+    with CreateKeyspaceParser with CreateTableParser with CreateIndexParser
+    with SelectStatementParser with InsertStatementParser with DeleteStatementParser {
   def parseSchema(input: String): ParseResult[Seq[DataDefinition]] =
     parse(phrase(rep(dataDefinition <~ semicolon)), input)
 
@@ -40,79 +41,9 @@ object CqlParser extends JavaTokenParsers with Helpers with TermParser with Sele
   def dataDefinition: Parser[DataDefinition] =
     createKeyspace | createTable | createIndex
 
-  def createKeyspace: Parser[CreateKeyspace] = {
-    import CreateKeyspace._
-    val mapKey: Parser[String] = "'" ~> identifier <~ "'"
-    val mapValue: Parser[String] = "'" ~> identifier <~ "'"
-    val mapKeyValue = mapKey ~ (":" ~> mapValue) ^^ { case k ~ v => k -> v }
-    val map: Parser[Seq[(String, String)]] = curlyBraces(repsep(mapKeyValue, ","))
-    def option: Parser[KeyspaceOption] = ("replication".i ~> "=" ~> map) ^^ Replication
-    def withOptions: Parser[Seq[KeyspaceOption]] = ("WITH".i ~> rep1sep(option, "AND".i)) orEmpty
-
-    "CREATE KEYSPACE".i ~>
-      ifNotExists ~
-      keyspaceName ~
-      withOptions ^^^^ CreateKeyspace.apply // TODO: with properties   // <create-keyspace-stmt> ::= CREATE KEYSPACE (IF NOT EXISTS)? <identifier> WITH <properties>
-  }
-
-  def use: Parser[UseStatement] = "use".i ~> keyspaceName ^^ UseStatement
-
   def alterKeyspace: Parser[Cql3Statement] = ??? // <create-keyspace-stmt> ::= ALTER KEYSPACE <identifier> WITH <properties>
 
   def dropKeyspace: Parser[Cql3Statement] = ??? // <drop-keyspace-stmt> ::= DROP KEYSPACE ( IF EXISTS )? <identifier>
-
-  def createTable: Parser[CreateTable] = {
-    import CreateTable._
-
-    def createTable = "create".i ~> ("table".i | "columnfamily".i)
-
-    def columnDefinition: Parser[Column] = identifier ~ dataType ~ "STATIC".flag ~ "PRIMARY KEY".flag ^^^^ Column
-
-    def primaryKeyDefinition: Parser[PrimaryKey] = {
-      def simplePartitionKey = identifier.asSeq
-      def compositePartitionKey = parenthesis(rep1sep(identifier, ","))
-      def partitionKeys: Parser[Seq[String]] = simplePartitionKey | compositePartitionKey
-      def clusteringColumns: Parser[Seq[String]] = ("," ~> rep1sep(identifier, ",")) orEmpty
-
-      "PRIMARY KEY".i ~> parenthesis(partitionKeys ~ clusteringColumns) ^^^^ PrimaryKey
-    }
-
-    def option: Parser[CreateTableOption] = ??? // <property> | COMPACT STORAGE | CLUSTERING ORDER
-    def withOptions: Parser[Seq[CreateTableOption]] = ("WITH".i ~> rep1sep(option, "AND".i)) orEmpty
-
-    createTable ~>
-      ifNotExists ~
-      tableName ~
-      ("(" ~> rep1sep(columnDefinition, ",")) ~
-      ("," ~> primaryKeyDefinition).? ~
-      (")" ~> withOptions) ^^^^ CreateTable.apply
-  }
-
-  def createIndex: Parser[CreateIndex] = {
-    import CreateIndex._
-
-    def indexName = identifier.?
-    def onTable = "ON".i ~> tableName
-    def indexIdentifier: Parser[IndexIdentifier] = {
-      val keys = "KEYS".i ~> parenthesis(identifier) ^^ Keys
-      val ident = identifier ^^ Identifier
-      parenthesis(((keys | ident)))
-    }
-    def using = {
-      def withOptions =
-        "WITH".i ~> "OPTIONS".i ~> "=" ~> mapLiteral
-
-      "using".i ~> Constants.string ~ withOptions.? ^^^^ Using
-    }.?
-
-    "CREATE".i ~>
-      ("CUSTOM".flag <~ "INDEX".i) ~
-      ifNotExists ~
-      indexName ~
-      onTable ~
-      indexIdentifier ~
-      using ^^^^ CreateIndex.apply
-  }
 
   ///////////////////////////////////// Data Manipulation
   def dmlDefinition: Parser[DataManipulation] =

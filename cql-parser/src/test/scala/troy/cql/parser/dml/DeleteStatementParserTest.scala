@@ -1,10 +1,12 @@
 package troy.cql.parser.dml
 
 import org.scalatest.{ FlatSpec, Matchers }
-import troy.cql.ast.dml.DeleteStatement.{ Exist, SimpleIfCondition }
-import troy.cql.ast.{ Constant, CqlParser, TupleLiteral }
+import troy.cql.ast.dml.Delete.{ Exist, SimpleIfCondition }
+import troy.cql.ast.{ Constant, TupleLiteral }
 import troy.cql.ast.dml._
 import troy.cql.ast.dml.WhereClause.Relation.Simple
+import troy.cql.ast.DeleteStatement
+import troy.cql.parser.ParserTestUtils.parseQuery
 
 class DeleteStatementParserTest extends FlatSpec with Matchers {
   "Delete Parser" should "parse simple delete statement" in {
@@ -167,11 +169,4 @@ class DeleteStatementParserTest extends FlatSpec with Matchers {
     literal.values(1) shouldBe Constant("B70DE1D0")
 
   }
-
-  def parseQuery(statement: String) =
-    CqlParser
-      .parseDML(statement) match {
-        case CqlParser.Success(res, _)    => res
-        case CqlParser.Failure(msg, next) => fail(s"Parse Failure: $msg, line = ${next.pos.line}, column = ${next.pos.column}")
-      }
 }

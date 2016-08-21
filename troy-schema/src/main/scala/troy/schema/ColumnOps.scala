@@ -1,13 +1,15 @@
 package troy.schema
 
-import troy.cql.ast.{ CreateTable, DataType }
+import troy.cql.ast.DataType
+import troy.cql.ast.ddl.Table
 import troy.cql.ast.dml.Operator
 
 object ColumnOps {
-  implicit class Operations(val column: CreateTable.Column) extends AnyVal {
+  implicit class Operations(val column: Table.Column) extends AnyVal {
     import Operator._
     import DataType._
 
+    // TODO: Add NotEquals, In
     def operandType(operator: Operator): Option[DataType] = operator match {
       case Equals | LessThan | GreaterThan | LessThanOrEqual | GreaterThanOrEqual =>
         Some(column.dataType).collect {

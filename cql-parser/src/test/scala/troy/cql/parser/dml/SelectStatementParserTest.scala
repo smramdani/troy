@@ -18,13 +18,14 @@ package troy.cql.parser.dml
 
 import org.scalatest._
 import troy.cql.ast._
-import troy.cql.ast.dml.{ Operator, SelectStatement }
+import troy.cql.ast.dml.{ Operator, Select }
 import troy.cql.ast.dml.WhereClause.Relation.{ Simple, Token, Tupled }
 import troy.cql.ast.dml.WhereClause.Relation
+import troy.cql.parser.ParserTestUtils.parseQuery
 
 class SelectStatementParserTest extends FlatSpec with Matchers {
   "Select Parser" should "parse simple select statements" in {
-    val statement = parseQuery("SELECT name, occupation FROM users;")
+    val statement = parseQuery("SELECT name, occupation FROM users;").asInstanceOf[SelectStatement]
     statement.mod.isEmpty shouldBe true
     statement.from.table shouldBe "users"
     statement.where.isEmpty shouldBe true
@@ -33,18 +34,18 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     statement.limit.isEmpty shouldBe true
     statement.allowFiltering shouldBe false
 
-    val selection = statement.selection.asInstanceOf[SelectStatement.SelectClause]
+    val selection = statement.selection.asInstanceOf[Select.SelectClause]
     selection.items.size shouldBe 2
 
-    selection.items(0).selector shouldBe SelectStatement.ColumnName("name")
+    selection.items(0).selector shouldBe Select.ColumnName("name")
     selection.items(0).as.isEmpty shouldBe true
 
-    selection.items(1).selector shouldBe SelectStatement.ColumnName("occupation")
+    selection.items(1).selector shouldBe Select.ColumnName("occupation")
     selection.items(1).as.isEmpty shouldBe true
   }
 
   it should "parse simple select statements with keyspace" in {
-    val statement = parseQuery("SELECT name, occupation FROM test.users;")
+    val statement = parseQuery("SELECT name, occupation FROM test.users;").asInstanceOf[SelectStatement]
     statement.from.keyspace.get.name shouldBe "test"
     statement.from.table shouldBe "users"
     statement.mod.isEmpty shouldBe true
@@ -54,58 +55,58 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     statement.limit.isEmpty shouldBe true
     statement.allowFiltering shouldBe false
 
-    val selection = statement.selection.asInstanceOf[SelectStatement.SelectClause]
+    val selection = statement.selection.asInstanceOf[Select.SelectClause]
     selection.items.size shouldBe 2
 
-    selection.items(0).selector shouldBe SelectStatement.ColumnName("name")
+    selection.items(0).selector shouldBe Select.ColumnName("name")
     selection.items(0).as.isEmpty shouldBe true
 
-    selection.items(1).selector shouldBe SelectStatement.ColumnName("occupation")
+    selection.items(1).selector shouldBe Select.ColumnName("occupation")
     selection.items(1).as.isEmpty shouldBe true
   }
 
   it should "parse simple select statements with JSON" in {
-    val statement = parseQuery("SELECT JSON name, occupation FROM users;")
+    val statement = parseQuery("SELECT JSON name, occupation FROM users;").asInstanceOf[SelectStatement]
     statement.from.table shouldBe "users"
-    statement.mod.get shouldBe SelectStatement.Json
+    statement.mod.get shouldBe Select.Json
     statement.where.isEmpty shouldBe true
     statement.orderBy.isEmpty shouldBe true
     statement.perPartitionLimit.isEmpty shouldBe true
     statement.limit.isEmpty shouldBe true
     statement.allowFiltering shouldBe false
 
-    val selection = statement.selection.asInstanceOf[SelectStatement.SelectClause]
+    val selection = statement.selection.asInstanceOf[Select.SelectClause]
     selection.items.size shouldBe 2
 
-    selection.items(0).selector shouldBe SelectStatement.ColumnName("name")
+    selection.items(0).selector shouldBe Select.ColumnName("name")
     selection.items(0).as.isEmpty shouldBe true
 
-    selection.items(1).selector shouldBe SelectStatement.ColumnName("occupation")
+    selection.items(1).selector shouldBe Select.ColumnName("occupation")
     selection.items(1).as.isEmpty shouldBe true
   }
 
   it should "parse simple select statements with DISTINCT" in {
-    val statement = parseQuery("SELECT DISTINCT name, occupation FROM users;")
+    val statement = parseQuery("SELECT DISTINCT name, occupation FROM users;").asInstanceOf[SelectStatement]
     statement.from.table shouldBe "users"
-    statement.mod.get shouldBe SelectStatement.Distinct
+    statement.mod.get shouldBe Select.Distinct
     statement.where.isEmpty shouldBe true
     statement.orderBy.isEmpty shouldBe true
     statement.perPartitionLimit.isEmpty shouldBe true
     statement.limit.isEmpty shouldBe true
     statement.allowFiltering shouldBe false
 
-    val selection = statement.selection.asInstanceOf[SelectStatement.SelectClause]
+    val selection = statement.selection.asInstanceOf[Select.SelectClause]
     selection.items.size shouldBe 2
 
-    selection.items(0).selector shouldBe SelectStatement.ColumnName("name")
+    selection.items(0).selector shouldBe Select.ColumnName("name")
     selection.items(0).as.isEmpty shouldBe true
 
-    selection.items(1).selector shouldBe SelectStatement.ColumnName("occupation")
+    selection.items(1).selector shouldBe Select.ColumnName("occupation")
     selection.items(1).as.isEmpty shouldBe true
   }
 
   it should "parse asterisk select statements" in {
-    val statement = parseQuery("SELECT * FROM users;")
+    val statement = parseQuery("SELECT * FROM users;").asInstanceOf[SelectStatement]
     statement.from.table shouldBe "users"
     statement.mod.isEmpty shouldBe true
     statement.where.isEmpty shouldBe true
@@ -113,11 +114,11 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     statement.perPartitionLimit.isEmpty shouldBe true
     statement.limit.isEmpty shouldBe true
     statement.allowFiltering shouldBe false
-    statement.selection shouldBe SelectStatement.Asterisk
+    statement.selection shouldBe Select.Asterisk
   }
 
   it should "parse select statements with count selector" in {
-    val statement = parseQuery("SELECT COUNT (*) AS user_count FROM users;")
+    val statement = parseQuery("SELECT COUNT (*) AS user_count FROM users;").asInstanceOf[SelectStatement]
     statement.from.table shouldBe "users"
     statement.mod.isEmpty shouldBe true
     statement.where.isEmpty shouldBe true
@@ -126,15 +127,15 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     statement.limit.isEmpty shouldBe true
     statement.allowFiltering shouldBe false
 
-    val selection = statement.selection.asInstanceOf[SelectStatement.SelectClause]
+    val selection = statement.selection.asInstanceOf[Select.SelectClause]
     selection.items.size shouldBe 1
 
-    selection.items(0).selector shouldBe SelectStatement.Count
+    selection.items(0).selector shouldBe Select.Count
     selection.items(0).as.get shouldBe "user_count"
   }
 
   it should "parse select statements with column name as selector" in {
-    val statement = parseQuery("SELECT name AS user_name, occupation AS user_occupation FROM users;")
+    val statement = parseQuery("SELECT name AS user_name, occupation AS user_occupation FROM users;").asInstanceOf[SelectStatement]
     statement.from.table shouldBe "users"
     statement.mod.isEmpty shouldBe true
     statement.where.isEmpty shouldBe true
@@ -143,18 +144,18 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     statement.limit.isEmpty shouldBe true
     statement.allowFiltering shouldBe false
 
-    val selection = statement.selection.asInstanceOf[SelectStatement.SelectClause]
+    val selection = statement.selection.asInstanceOf[Select.SelectClause]
     selection.items.size shouldBe 2
 
-    selection.items(0).selector.asInstanceOf[SelectStatement.ColumnName].name shouldBe "name"
+    selection.items(0).selector.asInstanceOf[Select.ColumnName].name shouldBe "name"
     selection.items(0).as.get shouldBe "user_name"
 
-    selection.items(1).selector.asInstanceOf[SelectStatement.ColumnName].name shouldBe "occupation"
+    selection.items(1).selector.asInstanceOf[Select.ColumnName].name shouldBe "occupation"
     selection.items(1).as.get shouldBe "user_occupation"
   }
 
   it should "parse select statements with function name selector" ignore {
-    val statement = parseQuery("SELECT intAsBlob(4) FROM t;")
+    val statement = parseQuery("SELECT intAsBlob(4) FROM t;").asInstanceOf[SelectStatement]
     statement.from.table shouldBe "t"
     statement.mod.isEmpty shouldBe true
     statement.where.isEmpty shouldBe true
@@ -163,19 +164,19 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     statement.limit.isEmpty shouldBe true
     statement.allowFiltering shouldBe false
 
-    val selection = statement.selection.asInstanceOf[SelectStatement.SelectClause]
+    val selection = statement.selection.asInstanceOf[Select.SelectClause]
     selection.items.size shouldBe 1
 
-    val selector = selection.items(0).selector.asInstanceOf[SelectStatement.Function]
+    val selector = selection.items(0).selector.asInstanceOf[Select.Function]
 
     selector.functionName shouldBe "intAsBlob"
-    val params = selector.params.asInstanceOf[SelectStatement.SelectTerm]
+    val params = selector.params.asInstanceOf[Select.SelectTerm]
     params shouldBe Constant("4") //TODO: Term Constant need refactor
     selection.items(0).as.isEmpty shouldBe true
   }
 
   it should "parse select statements with function name selector and as" ignore {
-    val statement = parseQuery("SELECT intAsBlob(4) AS four FROM t;")
+    val statement = parseQuery("SELECT intAsBlob(4) AS four FROM t;").asInstanceOf[SelectStatement]
     statement.from.table shouldBe "t"
     statement.mod.isEmpty shouldBe true
     statement.where.isEmpty shouldBe true
@@ -184,48 +185,48 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     statement.limit.isEmpty shouldBe true
     statement.allowFiltering shouldBe false
 
-    val selection = statement.selection.asInstanceOf[SelectStatement.SelectClause]
+    val selection = statement.selection.asInstanceOf[Select.SelectClause]
     selection.items.size shouldBe 1
 
-    val selector = selection.items(0).selector.asInstanceOf[SelectStatement.Function]
+    val selector = selection.items(0).selector.asInstanceOf[Select.Function]
 
     selector.functionName shouldBe "intAsBlob"
-    val params = selector.params.asInstanceOf[SelectStatement.SelectTerm]
+    val params = selector.params.asInstanceOf[Select.SelectTerm]
     params shouldBe Constant("4") //TODO: Term Constant need refactor
     selection.items(0).as.get shouldBe "four"
   }
 
   it should "parse simple LIMIT clause" in {
-    val statement = parseQuery("SELECT name, occupation FROM users LIMIT 1;")
-    statement.limit.get shouldBe SelectStatement.LimitValue("1")
+    val statement = parseQuery("SELECT name, occupation FROM users LIMIT 1;").asInstanceOf[SelectStatement]
+    statement.limit.get shouldBe Select.LimitValue("1")
     statement.allowFiltering shouldBe false
-    statement.selection.asInstanceOf[SelectStatement.SelectClause].items.size shouldBe 2
+    statement.selection.asInstanceOf[Select.SelectClause].items.size shouldBe 2
   }
 
   it should "parse simple limit (lowercase) clause" in {
-    val statement = parseQuery("SELECT name, occupation FROM users limit 1;")
-    statement.limit.get shouldBe SelectStatement.LimitValue("1")
+    val statement = parseQuery("SELECT name, occupation FROM users limit 1;").asInstanceOf[SelectStatement]
+    statement.limit.get shouldBe Select.LimitValue("1")
     statement.allowFiltering shouldBe false
-    statement.selection.asInstanceOf[SelectStatement.SelectClause].items.size shouldBe 2
+    statement.selection.asInstanceOf[Select.SelectClause].items.size shouldBe 2
   }
 
   it should "parse select statements with simple where clause" in {
-    val statement = parseQuery("SELECT JSON name, occupation FROM users WHERE userid = 199;")
+    val statement = parseQuery("SELECT JSON name, occupation FROM users WHERE userid = 199;").asInstanceOf[SelectStatement]
 
     statement.from.table shouldBe "users"
-    statement.mod.get shouldBe SelectStatement.Json
+    statement.mod.get shouldBe Select.Json
     statement.orderBy.isEmpty shouldBe true
     statement.perPartitionLimit.isEmpty shouldBe true
     statement.limit.isEmpty shouldBe true
     statement.allowFiltering shouldBe false
 
-    val selection = statement.selection.asInstanceOf[SelectStatement.SelectClause]
+    val selection = statement.selection.asInstanceOf[Select.SelectClause]
     selection.items.size shouldBe 2
 
-    selection.items(0).selector shouldBe SelectStatement.ColumnName("name")
+    selection.items(0).selector shouldBe Select.ColumnName("name")
     selection.items(0).as.isEmpty shouldBe true
 
-    selection.items(1).selector shouldBe SelectStatement.ColumnName("occupation")
+    selection.items(1).selector shouldBe Select.ColumnName("occupation")
     selection.items(1).as.isEmpty shouldBe true
 
     statement.where.isDefined shouldBe true
@@ -237,7 +238,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
   }
 
   it should "parse select statements with where IN clause" in {
-    val statement = parseQuery("SELECT name, occupation FROM users WHERE userid IN (199, 200, 207);")
+    val statement = parseQuery("SELECT name, occupation FROM users WHERE userid IN (199, 200, 207);").asInstanceOf[SelectStatement]
 
     statement.from.table shouldBe "users"
     statement.mod.isEmpty shouldBe true
@@ -246,13 +247,13 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     statement.limit.isEmpty shouldBe true
     statement.allowFiltering shouldBe false
 
-    val selection = statement.selection.asInstanceOf[SelectStatement.SelectClause]
+    val selection = statement.selection.asInstanceOf[Select.SelectClause]
     selection.items.size shouldBe 2
 
-    selection.items(0).selector.asInstanceOf[SelectStatement.ColumnName].name shouldBe "name"
+    selection.items(0).selector.asInstanceOf[Select.ColumnName].name shouldBe "name"
     selection.items(0).as.isEmpty shouldBe true
 
-    selection.items(1).selector.asInstanceOf[SelectStatement.ColumnName].name shouldBe "occupation"
+    selection.items(1).selector.asInstanceOf[Select.ColumnName].name shouldBe "occupation"
     selection.items(1).as.isEmpty shouldBe true
 
     statement.where.isDefined shouldBe true
@@ -269,7 +270,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
   }
 
   it should "parse select statements with where clause and = > <= operators" in {
-    val statement = parseQuery("SELECT time, value FROM events WHERE event_type = 'myEvent' AND time > '2011-02-03' AND time <= '2012-01-01';")
+    val statement = parseQuery("SELECT time, value FROM events WHERE event_type = 'myEvent' AND time > '2011-02-03' AND time <= '2012-01-01';").asInstanceOf[SelectStatement]
 
     statement.from.table shouldBe "events"
     statement.mod.isEmpty shouldBe true
@@ -278,13 +279,13 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     statement.limit.isEmpty shouldBe true
     statement.allowFiltering shouldBe false
 
-    val selection = statement.selection.asInstanceOf[SelectStatement.SelectClause]
+    val selection = statement.selection.asInstanceOf[Select.SelectClause]
     selection.items.size shouldBe 2
 
-    selection.items(0).selector shouldBe SelectStatement.ColumnName("time")
+    selection.items(0).selector shouldBe Select.ColumnName("time")
     selection.items(0).as.isEmpty shouldBe true
 
-    selection.items(1).selector shouldBe SelectStatement.ColumnName("value")
+    selection.items(1).selector shouldBe Select.ColumnName("value")
     selection.items(1).as.isEmpty shouldBe true
 
     statement.where.isDefined shouldBe true
@@ -305,7 +306,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
   }
 
   it should "parse select statements with where clause and != >= < operators" in {
-    val statement = parseQuery("SELECT entry_title, content FROM posts WHERE userid = 'john doe' AND blog_title!='Spam' AND posted_at >= '2012-01-01' AND posted_at < '2012-01-31';")
+    val statement = parseQuery("SELECT entry_title, content FROM posts WHERE userid = 'john doe' AND blog_title!='Spam' AND posted_at >= '2012-01-01' AND posted_at < '2012-01-31';").asInstanceOf[SelectStatement]
 
     statement.from.table shouldBe "posts"
     statement.mod.isEmpty shouldBe true
@@ -314,13 +315,13 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     statement.limit.isEmpty shouldBe true
     statement.allowFiltering shouldBe false
 
-    val selection = statement.selection.asInstanceOf[SelectStatement.SelectClause]
+    val selection = statement.selection.asInstanceOf[Select.SelectClause]
     selection.items.size shouldBe 2
 
-    selection.items(0).selector shouldBe SelectStatement.ColumnName("entry_title")
+    selection.items(0).selector shouldBe Select.ColumnName("entry_title")
     selection.items(0).as.isEmpty shouldBe true
 
-    selection.items(1).selector shouldBe SelectStatement.ColumnName("content")
+    selection.items(1).selector shouldBe Select.ColumnName("content")
     selection.items(1).as.isEmpty shouldBe true
 
     statement.where.isDefined shouldBe true
@@ -344,7 +345,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
   }
 
   it should "parse asterisk select statements with where clause token" in {
-    val statement = parseQuery("SELECT * FROM posts WHERE token(userid) > token('tom') AND token(userid) < token('bob');")
+    val statement = parseQuery("SELECT * FROM posts WHERE token(userid) > token('tom') AND token(userid) < token('bob');").asInstanceOf[SelectStatement]
     statement.from.table shouldBe "posts"
     statement.mod.isEmpty shouldBe true
     statement.where.isDefined shouldBe true
@@ -352,7 +353,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     statement.perPartitionLimit.isEmpty shouldBe true
     statement.limit.isEmpty shouldBe true
     statement.allowFiltering shouldBe false
-    statement.selection shouldBe SelectStatement.Asterisk
+    statement.selection shouldBe Select.Asterisk
 
     statement.where.isDefined shouldBe true
     val relations = statement.where.get.relations
@@ -376,7 +377,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
   }
 
   it should "parse asterisk select statements with where clause tupled literal424" in {
-    val statement = parseQuery("SELECT * FROM posts WHERE userid = 'john doe' AND (blog_title, posted_at) > ('Johns Blog', '2012-01-01');")
+    val statement = parseQuery("SELECT * FROM posts WHERE userid = 'john doe' AND (blog_title, posted_at) > ('Johns Blog', '2012-01-01');").asInstanceOf[SelectStatement]
     statement.from.table shouldBe "posts"
     statement.mod.isEmpty shouldBe true
     statement.where.isDefined shouldBe true
@@ -384,7 +385,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     statement.perPartitionLimit.isEmpty shouldBe true
     statement.limit.isEmpty shouldBe true
     statement.allowFiltering shouldBe false
-    statement.selection shouldBe SelectStatement.Asterisk
+    statement.selection shouldBe Select.Asterisk
 
     statement.where.isDefined shouldBe true
     val relations = statement.where.get.relations
@@ -408,7 +409,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
   }
 
   it should "select statements with where clause containing anonymous variables" in {
-    val statement = parseQuery("SELECT author_id FROM test.posts WHERE author_name = ?;")
+    val statement = parseQuery("SELECT author_id FROM test.posts WHERE author_name = ?;").asInstanceOf[SelectStatement]
 
     statement.where.isDefined shouldBe true
     val relations = statement.where.get.relations
@@ -419,7 +420,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
   }
 
   it should "select statements with where clause containing named variables" in {
-    val statement = parseQuery("SELECT author_id FROM test.posts WHERE author_name = :x;")
+    val statement = parseQuery("SELECT author_id FROM test.posts WHERE author_name = :x;").asInstanceOf[SelectStatement]
 
     statement.where.isDefined shouldBe true
     val relations = statement.where.get.relations
@@ -430,7 +431,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
   }
 
   it should "parse select statements with where clause and allow filtering" in {
-    val statement = parseQuery("SELECT time, value FROM events WHERE event_type = 'myEvent' AND time > '2011-02-03' AND time <= '2012-01-01' ALLOW FILTERING;")
+    val statement = parseQuery("SELECT time, value FROM events WHERE event_type = 'myEvent' AND time > '2011-02-03' AND time <= '2012-01-01' ALLOW FILTERING;").asInstanceOf[SelectStatement]
 
     statement.from.table shouldBe "events"
     statement.mod.isEmpty shouldBe true
@@ -439,13 +440,13 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     statement.limit.isEmpty shouldBe true
     statement.allowFiltering shouldBe true
 
-    val selection = statement.selection.asInstanceOf[SelectStatement.SelectClause]
+    val selection = statement.selection.asInstanceOf[Select.SelectClause]
     selection.items.size shouldBe 2
 
-    selection.items(0).selector shouldBe SelectStatement.ColumnName("time")
+    selection.items(0).selector shouldBe Select.ColumnName("time")
     selection.items(0).as.isEmpty shouldBe true
 
-    selection.items(1).selector shouldBe SelectStatement.ColumnName("value")
+    selection.items(1).selector shouldBe Select.ColumnName("value")
     selection.items(1).as.isEmpty shouldBe true
 
     statement.where.isDefined shouldBe true
@@ -464,12 +465,4 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations(2).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "2012-01-01"
 
   }
-
-  def parseQuery(statement: String) =
-    CqlParser
-      .parseQuery(statement) match {
-        case CqlParser.Success(res: SelectStatement, _) => res
-        case CqlParser.Success(res, _)                  => fail(s"$res is not SelectStatement")
-        case CqlParser.Failure(msg, next)               => fail(s"Parse Failure: $msg, line = ${next.pos.line}, column = ${next.pos.column}")
-      }
 }

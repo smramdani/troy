@@ -1,11 +1,12 @@
 package troy.cql.parser.dml
 
 import troy.cql.ast.CqlParser._
-import troy.cql.ast.dml.InsertStatement
+import troy.cql.ast.InsertStatement
+import troy.cql.ast.dml.Insert
 
 trait InsertStatementParser {
   def insertStatement: Parser[InsertStatement] = {
-    import InsertStatement._
+    import Insert._
 
     def into = "INTO" ~> tableName
 

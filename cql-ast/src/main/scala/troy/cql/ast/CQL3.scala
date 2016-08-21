@@ -16,57 +16,8 @@
 
 package troy.cql.ast
 
-trait Cql3Statement
-trait DataDefinition
-trait DataManipulation
-
-case class CreateKeyspace(
-  ifNotExists: Boolean,
-  keyspaceName: KeyspaceName,
-  properties: Seq[CreateKeyspace.KeyspaceOption]
-) extends DataDefinition
-object CreateKeyspace {
-  trait KeyspaceOption
-  case class Replication(options: Seq[(String, String)]) extends KeyspaceOption // TODO
-}
-
-case class UseStatement(keyspaceName: KeyspaceName) extends DataDefinition
 //
 //trait SchemaAlteringStatement
-case class CreateTable(
-  ifNotExists: Boolean,
-  tableName: TableName,
-  columns: Seq[CreateTable.Column],
-  primaryKey: Option[CreateTable.PrimaryKey],
-  options: Seq[CreateTable.CreateTableOption]
-) extends DataDefinition
-
-object CreateTable {
-  case class Column(name: String, dataType: DataType, isStatic: Boolean, isPrimaryKey: Boolean)
-  case class PrimaryKey(partitionKeys: Seq[String], clusteringColumns: Seq[String])
-
-  trait CreateTableOption
-  case class Property() extends CreateTableOption
-  case object CompactStorage extends CreateTableOption
-  case object ClusteringOrder extends CreateTableOption
-}
-
-case class CreateIndex(
-  isCustom: Boolean,
-  ifNotExists: Boolean,
-  indexName: Option[String],
-  tableName: TableName,
-  identifier: CreateIndex.IndexIdentifier,
-  using: Option[CreateIndex.Using]
-) extends DataDefinition
-
-object CreateIndex {
-  case class Using(using: String, options: Option[MapLiteral])
-
-  trait IndexIdentifier
-  case class Identifier(value: String) extends IndexIdentifier
-  case class Keys(of: String) extends IndexIdentifier
-}
 
 //
 //case class KeyspaceReplication(`class`: String, replicationFactor: Int)
@@ -89,8 +40,9 @@ object ConsistencyLevel {
   case object EachQuorum extends ConsistencyLevel
 }
 
-case class KeyspaceName(name: String)
-case class TableName(keyspace: Option[KeyspaceName], table: String) {
+final case class KeyspaceName(name: String)
+
+final case class TableName(keyspace: Option[KeyspaceName], table: String) {
   override def toString = keyspace.map(_.name + ".").getOrElse("") + table
 }
-case class FunctionName(keyspace: Option[KeyspaceName], table: String)
+final case class FunctionName(keyspace: Option[KeyspaceName], table: String)

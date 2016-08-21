@@ -1,17 +1,15 @@
 package troy.cql.parser.dml
 import troy.cql.ast.CqlParser._
-import troy.cql.ast.dml.{ Operator, SelectStatement, WhereClause }
-import troy.cql.ast.dml.SelectStatement.OrderBy.{ Direction, Ordering }
-import troy.cql.ast.dml.WhereClause.Relation
-import troy.cql.ast.dml.SelectStatement.{ OrderBy, _ }
+import troy.cql.ast.SelectStatement
+import troy.cql.ast.dml.Select
 
 trait SelectStatementParser {
   def selectStatement: Parser[SelectStatement] = {
-    import SelectStatement._
+    import Select._
 
     def mod: Parser[Mod] = {
-      def json = "JSON".i ^^^ SelectStatement.Json
-      def distinct = "DISTINCT".i ^^^ SelectStatement.Distinct
+      def json = "JSON".i ^^^ Select.Json
+      def distinct = "DISTINCT".i ^^^ Select.Distinct
       json | distinct
     }
     def select: Parser[Selection] = {
@@ -19,14 +17,18 @@ trait SelectStatementParser {
       def select_clause: Parser[SelectClause] = {
         def select_clause_item: Parser[SelectionClauseItem] = {
           def selector: Parser[Selector] = {
-            def count = "COUNT".i ~ "(*)" ^^^ SelectStatement.Count
-            def term_selector = term ^^ SelectStatement.SelectTerm
-            def cast = "CAST".i ~> parenthesis(selector ~ ("AS".i ~> dataType)) ^^^^ SelectStatement.Cast
+            def count = "COUNT".i ~ "(*)" ^^^ Select
+              .Count
+            def term_selector = term ^^ Select
+              .SelectTerm
+            def cast = "CAST".i ~> parenthesis(selector ~ ("AS".i ~> dataType)) ^^^^ Select
+              .Cast
             def column_name = identifier ^^ ColumnName
             term_selector | cast | count | column_name
           }
 
-          selector ~ ("AS".i ~> identifier).? ^^^^ SelectStatement.SelectionClauseItem
+          selector ~ ("AS".i ~> identifier).? ^^^^ Select
+            .SelectionClauseItem
         }
 
         rep1sep(select_clause_item, ",") ^^ SelectClause
@@ -37,7 +39,7 @@ trait SelectStatementParser {
 
     def from = "FROM" ~> tableName
 
-    def limitParam: Parser[SelectStatement.LimitParam] = {
+    def limitParam: Parser[Select.LimitParam] = {
       def limitValue = Constants.integer ^^ LimitValue
       def limitVariable = bindMarker ^^ LimitVariable
 

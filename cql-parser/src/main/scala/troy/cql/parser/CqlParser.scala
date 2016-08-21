@@ -42,8 +42,6 @@ object CqlParser extends JavaTokenParsers
   def dataDefinition: Parser[DataDefinition] =
     createKeyspace | createTable | createIndex
 
-  def use: Parser[UseStatement] = "use".i ~> keyspaceName ^^ UseStatement
-
   def alterKeyspace: Parser[Cql3Statement] = ??? // <create-keyspace-stmt> ::= ALTER KEYSPACE <identifier> WITH <properties>
 
   def dropKeyspace: Parser[Cql3Statement] = ??? // <drop-keyspace-stmt> ::= DROP KEYSPACE ( IF EXISTS )? <identifier>

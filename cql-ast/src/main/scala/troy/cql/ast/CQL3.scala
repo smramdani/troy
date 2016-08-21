@@ -21,14 +21,6 @@ import troy.cql.ast.ddl.KeyspaceName
 //
 //trait SchemaAlteringStatement
 
-object Index {
-  case class Using(using: String, options: Option[MapLiteral])
-
-  trait IndexIdentifier
-  case class Identifier(value: String) extends IndexIdentifier
-  case class Keys(of: String) extends IndexIdentifier
-}
-
 //
 //case class KeyspaceReplication(`class`: String, replicationFactor: Int)
 //case class CreateKeyspaceStatement(name: String, replication: KeyspaceReplication) extends SchemaAlteringStatement

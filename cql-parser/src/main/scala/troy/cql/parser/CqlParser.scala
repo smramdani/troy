@@ -20,14 +20,14 @@ import troy.cql.ast.dml._
 import troy.cql.ast.dml.{ UpdateParam, UpdateParamValue, UpdateVariable }
 import troy.cql.parser.{ Helpers, TermParser }
 import troy.cql.parser.dml.{ DeleteStatementParser, InsertStatementParser, SelectStatementParser }
-import troy.cql.parser.ddl.{ CreateKeyspaceParser, CreateTableParser }
+import troy.cql.parser.ddl.{ CreateKeyspaceParser, CreateTableParser, CreateIndexParser }
 import troy.cql.ast.ddl.KeyspaceName
 import scala.util.parsing.combinator._
 
 // Based on CQLv3.4.3: https://cassandra.apache.org/doc/latest/cql/index.html
 object CqlParser extends JavaTokenParsers
     with Helpers with TermParser
-    with CreateKeyspaceParser with CreateTableParser
+    with CreateKeyspaceParser with CreateTableParser with CreateIndexParser
     with SelectStatementParser with InsertStatementParser with DeleteStatementParser {
   def parseSchema(input: String): ParseResult[Seq[DataDefinition]] =
     parse(phrase(rep(dataDefinition <~ semicolon)), input)
@@ -45,32 +45,6 @@ object CqlParser extends JavaTokenParsers
   def alterKeyspace: Parser[Cql3Statement] = ??? // <create-keyspace-stmt> ::= ALTER KEYSPACE <identifier> WITH <properties>
 
   def dropKeyspace: Parser[Cql3Statement] = ??? // <drop-keyspace-stmt> ::= DROP KEYSPACE ( IF EXISTS )? <identifier>
-
-  def createIndex: Parser[CreateIndex] = {
-    import Index._
-
-    def indexName = identifier.?
-    def onTable = "ON".i ~> tableName
-    def indexIdentifier: Parser[IndexIdentifier] = {
-      val keys = "KEYS".i ~> parenthesis(identifier) ^^ Keys
-      val ident = identifier ^^ Identifier
-      parenthesis(((keys | ident)))
-    }
-    def using = {
-      def withOptions =
-        "WITH".i ~> "OPTIONS".i ~> "=" ~> mapLiteral
-
-      "using".i ~> Constants.string ~ withOptions.? ^^^^ Using
-    }.?
-
-    "CREATE".i ~>
-      ("CUSTOM".flag <~ "INDEX".i) ~
-      ifNotExists ~
-      indexName ~
-      onTable ~
-      indexIdentifier ~
-      using ^^^^ CreateIndex.apply
-  }
 
   ///////////////////////////////////// Data Manipulation
   def dmlDefinition: Parser[DataManipulation] =

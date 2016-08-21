@@ -3,7 +3,6 @@ package troy.cql.parser.dml
 import org.scalatest.{ FlatSpec, Matchers }
 import troy.cql.ast.dml.{ Insert, Timestamp, Ttl, UpdateValue }
 import troy.cql.ast._
-import org.scalatest._
 
 class InsertStatementParserTest extends FlatSpec with Matchers {
 

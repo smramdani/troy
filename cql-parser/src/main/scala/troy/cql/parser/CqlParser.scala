@@ -239,7 +239,7 @@ object CqlParser extends JavaTokenParsers with Helpers with TermParser with Sele
     "WHERE".i ~> rep1sep(relation, "AND".i) ^^ WhereClause.apply
   }
 
-  def condition = simpleSelection ~ operator ~ term ^^^^ SimpleCondition
+  def condition = simpleSelection ~ operator ~ term ^^^^ Condition
 
   def dataType: Parser[DataType] = {
     def ascii = "ascii".i ^^^ DataType.ascii

@@ -133,7 +133,7 @@ class DeleteStatementParserTest extends FlatSpec with Matchers {
     statement.ifCondition.isDefined shouldBe true
     val conditions = statement.ifCondition.get.asInstanceOf[SimpleIfCondition].conditions
     conditions.size shouldBe 1
-    val condition = conditions(0).asInstanceOf[SimpleCondition]
+    val condition = conditions(0).asInstanceOf[Condition]
     condition.simpleSelection.asInstanceOf[ColumnNameSelection].columnName shouldBe "postcode"
     condition.operator shouldBe Operator.Equals
     condition.term.asInstanceOf[Constant].raw shouldBe "M1"

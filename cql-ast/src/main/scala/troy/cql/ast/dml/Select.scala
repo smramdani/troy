@@ -9,26 +9,26 @@ object Select {
 
   sealed trait Selection
   case object Asterisk extends Selection
-  case class SelectClause(items: Seq[SelectionClauseItem]) extends Selection
-  case class SelectionClauseItem(selector: Selector, as: Option[Identifier])
+  final case class SelectClause(items: Seq[SelectionClauseItem]) extends Selection
+  final case class SelectionClauseItem(selector: Selector, as: Option[Identifier])
 
   sealed trait Selector
-  case class ColumnName(name: Identifier) extends Selector
-  case class SelectTerm(term: Term) extends Selector
-  case class Cast(selector: Selector, as: DataType) extends Selector
-  case class Function(functionName: FunctionName, params: Seq[Selector]) extends Selector // Non empty
+  final case class ColumnName(name: Identifier) extends Selector
+  final case class SelectTerm(term: Term) extends Selector
+  final case class Cast(selector: Selector, as: DataType) extends Selector
+  final case class Function(functionName: FunctionName, params: Seq[Selector]) extends Selector // Non empty
   case object Count extends Selector
 
   sealed trait LimitParam
-  case class LimitValue(value: String) extends LimitParam
-  case class LimitVariable(bindMarker: BindMarker) extends LimitParam
+  final case class LimitValue(value: String) extends LimitParam
+  final case class LimitVariable(bindMarker: BindMarker) extends LimitParam
 
-  case class OrderBy(orderings: Seq[OrderBy.Ordering])
+  final case class OrderBy(orderings: Seq[OrderBy.Ordering])
   object OrderBy {
     trait Direction
     case object Ascending extends Direction
     case object Descending extends Direction
 
-    case class Ordering(columnName: ColumnName, direction: Option[Direction])
+    final case class Ordering(columnName: ColumnName, direction: Option[Direction])
   }
 }

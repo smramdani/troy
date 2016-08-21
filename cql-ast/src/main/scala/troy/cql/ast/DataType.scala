@@ -16,11 +16,11 @@
 
 package troy.cql.ast
 
-trait DataType
+sealed trait DataType
 
 // TODO: frozen & UDT
 object DataType {
-  trait Native extends DataType
+  sealed trait Native extends DataType
   case object ascii extends Native
   case object bigint extends Native
   case object blob extends Native
@@ -42,11 +42,11 @@ object DataType {
   case object varchar extends Native
   case object varint extends Native
 
-  trait Collection extends DataType
-  case class list(t: Native) extends Collection
-  case class set(t: Native) extends Collection
-  case class map(k: Native, v: Native) extends Collection
+  sealed trait Collection extends DataType
+  final case class list(t: Native) extends Collection
+  final case class set(t: Native) extends Collection
+  final case class map(k: Native, v: Native) extends Collection
 
-  case class Tuple(ts: Seq[DataType]) extends DataType
-  case class Custom(javaClass: String) extends DataType
+  final case class Tuple(ts: Seq[DataType]) extends DataType
+  final case class Custom(javaClass: String) extends DataType
 }

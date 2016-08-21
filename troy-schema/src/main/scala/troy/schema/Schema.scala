@@ -83,6 +83,7 @@ case class SchemaImpl(schema: Map[KeyspaceName, Seq[CreateTable]], context: Opti
     } yield dts
 
   private def extractVariableTypes(table: CreateTable, where: WhereClause): Result[Seq[DataType]] =
+    // TODO: Handel all the inputs
     Result.flattenSeq(where.relations.map {
       case WhereClause.Relation.Simple(columnName, op, BindMarker.Anonymous) =>
         import ColumnOps.Operations

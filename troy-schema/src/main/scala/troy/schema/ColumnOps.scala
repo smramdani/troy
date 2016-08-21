@@ -9,6 +9,7 @@ object ColumnOps {
     import Operator._
     import DataType._
 
+    // TODO: Add NotEquals, In
     def operandType(operator: Operator): Option[DataType] = operator match {
       case Equals | LessThan | GreaterThan | LessThanOrEqual | GreaterThanOrEqual =>
         Some(column.dataType).collect {

@@ -7,7 +7,7 @@ sealed trait Cql3Statement
 sealed trait DataDefinition extends Cql3Statement
 sealed trait DataManipulation extends Cql3Statement
 
-case class DeleteStatement(
+final case class DeleteStatement(
   simpleSelection: Option[Seq[SimpleSelection]],
   from: TableName,
   using: Option[Seq[UpdateParam]],
@@ -15,14 +15,14 @@ case class DeleteStatement(
   ifCondition: Option[Delete.IfCondition]
 ) extends DataManipulation
 
-case class InsertStatement(
+final case class InsertStatement(
   into: TableName,
   insertClause: Insert.InsertClause,
   ifNotExists: Boolean,
   using: Option[Seq[UpdateParam]]
 ) extends DataManipulation
 
-case class SelectStatement(
+final case class SelectStatement(
   mod: Option[Select.Mod],
   selection: Select.Selection,
   from: TableName,
@@ -33,15 +33,15 @@ case class SelectStatement(
   allowFiltering: Boolean
 ) extends DataManipulation
 
-case class CreateKeyspace(
+final case class CreateKeyspace(
   ifNotExists: Boolean,
   keyspaceName: KeyspaceName,
   properties: Seq[Keyspace.KeyspaceOption]
 ) extends DataDefinition
 
-case class UseStatement(keyspaceName: KeyspaceName) extends DataDefinition
+final case class UseStatement(keyspaceName: KeyspaceName) extends DataDefinition
 
-case class CreateTable(
+final case class CreateTable(
   ifNotExists: Boolean,
   tableName: TableName,
   columns: Seq[Table.Column],
@@ -49,7 +49,7 @@ case class CreateTable(
   options: Seq[Table.CreateTableOption]
 ) extends DataDefinition
 
-case class CreateIndex(
+final case class CreateIndex(
   isCustom: Boolean,
   ifNotExists: Boolean,
   indexName: Option[String],

@@ -2,17 +2,17 @@ package troy.cql.ast.dml
 
 import troy.cql.ast.{ Identifier, Term, TupleLiteral }
 
-case class WhereClause(relations: Seq[WhereClause.Relation])
+final case class WhereClause(relations: Seq[WhereClause.Relation])
 object WhereClause {
-  trait Relation
+  sealed trait Relation
   object Relation {
-    case class Simple(columnName: Identifier, operator: Operator, term: Term) extends Relation
-    case class Tupled(columnNames: Seq[Identifier], operator: Operator, term: TupleLiteral) extends Relation
-    case class Token(columnNames: Seq[Identifier], operator: Operator, term: Term) extends Relation
+    final case class Simple(columnName: Identifier, operator: Operator, term: Term) extends Relation
+    final case class Tupled(columnNames: Seq[Identifier], operator: Operator, term: TupleLiteral) extends Relation
+    final case class Token(columnNames: Seq[Identifier], operator: Operator, term: Term) extends Relation
   }
 }
 
-trait Operator
+sealed trait Operator
 object Operator {
   case object Equals extends Operator
   case object LessThan extends Operator

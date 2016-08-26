@@ -1,7 +1,7 @@
 package troy.cql.parser.dml
 
 import org.scalatest.{ FlatSpec, Matchers }
-import troy.cql.ast.dml.Delete.{ Exist, SimpleIfCondition }
+import troy.cql.ast.dml.{ Exist, SimpleIfCondition }
 import troy.cql.ast.{ Constant, TupleLiteral }
 import troy.cql.ast.dml._
 import troy.cql.ast.dml.WhereClause.Relation.Simple

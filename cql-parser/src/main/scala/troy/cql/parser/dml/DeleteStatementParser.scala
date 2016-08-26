@@ -1,12 +1,11 @@
 package troy.cql.parser.dml
 
 import troy.cql.ast.CqlParser._
-import troy.cql.ast.dml.Delete
+import troy.cql.ast.dml.{ SimpleIfCondition, Exist, IfCondition }
 import troy.cql.ast.DeleteStatement
 
 trait DeleteStatementParser {
   def deleteStatement: Parser[DeleteStatement] = {
-    import Delete._
     def from = "FROM" ~> tableName
 
     def ifCondition: Parser[IfCondition] = {

@@ -33,6 +33,14 @@ final case class SelectStatement(
   allowFiltering: Boolean
 ) extends DataManipulation
 
+final case class UpdateStatement(
+  tableName: TableName,
+  using: Option[Seq[UpdateParam]],
+  set: Update.Assignment,
+  where: WhereClause,
+  ifCondition: Option[IfExistsOrCondition]
+) extends DataManipulation
+
 final case class CreateKeyspace(
   ifNotExists: Boolean,
   keyspaceName: KeyspaceName,

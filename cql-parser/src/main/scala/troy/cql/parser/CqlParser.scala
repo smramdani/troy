@@ -138,6 +138,14 @@ object CqlParser extends JavaTokenParsers
 
     columnNameSelectionWithTerm | columnNameSelectionWithFieldName | columnNameSelection
   }
+
+  def ifExistsOrCondition: Parser[IfExistsOrCondition] = {
+    def exist = "IF EXISTS".flag ^^ IfExist
+    def ifCondition = "IF".i ~> rep1sep(condition, "AND".i) ^^ IfCondition
+
+    ifCondition | exist
+  }
+
   def operator: Parser[Operator] = {
     import Operator._
     def eq = "=".r ^^^ Equals

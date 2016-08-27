@@ -12,7 +12,7 @@ final case class DeleteStatement(
   from: TableName,
   using: Option[Seq[UpdateParam]],
   where: WhereClause,
-  ifCondition: Option[IfCondition]
+  ifCondition: Option[IfExistsOrCondition]
 ) extends DataManipulation
 
 final case class InsertStatement(

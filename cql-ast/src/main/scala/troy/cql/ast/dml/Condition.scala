@@ -4,6 +4,6 @@ import troy.cql.ast.Term
 
 final case class Condition(simpleSelection: SimpleSelection, operator: Operator, term: Term)
 
-sealed trait IfCondition
-final case class SimpleIfCondition(conditions: Seq[Condition]) extends IfCondition
-final case class Exist(value: Boolean) extends IfCondition
+sealed trait IfExistsOrCondition
+final case class IfCondition(conditions: Seq[Condition]) extends IfExistsOrCondition
+final case class IfExist(value: Boolean) extends IfExistsOrCondition

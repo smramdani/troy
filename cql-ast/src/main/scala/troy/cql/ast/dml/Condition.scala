@@ -6,4 +6,4 @@ final case class Condition(simpleSelection: SimpleSelection, operator: Operator,
 
 sealed trait IfExistsOrCondition
 final case class IfCondition(conditions: Seq[Condition]) extends IfExistsOrCondition
-final case class IfExist(value: Boolean) extends IfExistsOrCondition
+final case object IfExist extends IfExistsOrCondition

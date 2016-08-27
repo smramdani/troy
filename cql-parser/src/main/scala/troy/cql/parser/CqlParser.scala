@@ -140,7 +140,7 @@ object CqlParser extends JavaTokenParsers
   }
 
   def ifExistsOrCondition: Parser[IfExistsOrCondition] = {
-    def exist = "IF EXISTS".flag ^^ IfExist
+    def exist = "IF EXISTS".r ^^^ IfExist
     def ifCondition = "IF".i ~> rep1sep(condition, "AND".i) ^^ IfCondition
 
     ifCondition | exist

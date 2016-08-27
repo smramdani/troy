@@ -112,7 +112,7 @@ class DeleteStatementParserTest extends FlatSpec with Matchers {
     statement.from.table shouldBe "Users"
     statement.using.isEmpty shouldBe true
     statement.ifCondition.isDefined shouldBe true
-    statement.ifCondition.get.asInstanceOf[IfExist].value shouldBe true
+    statement.ifCondition.get shouldBe IfExist
 
     val relations = statement.where.relations
     relations.size shouldBe 1

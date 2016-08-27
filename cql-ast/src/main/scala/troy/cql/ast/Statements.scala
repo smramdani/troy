@@ -36,7 +36,7 @@ final case class SelectStatement(
 final case class UpdateStatement(
   tableName: TableName,
   using: Option[Seq[UpdateParam]],
-  set: Update.Assignment,
+  set: Seq[Update.Assignment],
   where: WhereClause,
   ifCondition: Option[IfExistsOrCondition]
 ) extends DataManipulation

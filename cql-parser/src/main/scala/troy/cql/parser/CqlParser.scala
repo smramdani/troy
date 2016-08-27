@@ -19,7 +19,7 @@ package troy.cql.ast
 import troy.cql.ast.dml._
 import troy.cql.ast.dml.{ UpdateParam, UpdateParamValue, UpdateVariable }
 import troy.cql.parser.{ Helpers, TermParser }
-import troy.cql.parser.dml.{ DeleteStatementParser, InsertStatementParser, SelectStatementParser }
+import troy.cql.parser.dml.{ DeleteStatementParser, InsertStatementParser, SelectStatementParser, UpdateStatementParser }
 import troy.cql.parser.ddl.{ CreateKeyspaceParser, CreateTableParser, CreateIndexParser }
 import scala.util.parsing.combinator._
 
@@ -27,7 +27,7 @@ import scala.util.parsing.combinator._
 object CqlParser extends JavaTokenParsers
     with Helpers with TermParser
     with CreateKeyspaceParser with CreateTableParser with CreateIndexParser
-    with SelectStatementParser with InsertStatementParser with DeleteStatementParser {
+    with SelectStatementParser with InsertStatementParser with DeleteStatementParser with UpdateStatementParser {
   def parseSchema(input: String): ParseResult[Seq[DataDefinition]] =
     parse(phrase(rep(dataDefinition <~ semicolon)), input)
 
@@ -47,9 +47,7 @@ object CqlParser extends JavaTokenParsers
 
   ///////////////////////////////////// Data Manipulation
   def dmlDefinition: Parser[DataManipulation] =
-    selectStatement | insertStatement | deleteStatement // updateStatement | batchStatement | truncateStatement
-
-  def updateStatement: Parser[Cql3Statement] = ???
+    selectStatement | insertStatement | deleteStatement | updateStatement // batchStatement | truncateStatement
 
   def batchStatement: Parser[Cql3Statement] = ???
 

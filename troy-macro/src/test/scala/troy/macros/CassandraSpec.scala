@@ -9,6 +9,7 @@ import org.cassandraunit.dataset.cql.ClassPathCQLDataSet
 import org.cassandraunit.utils.EmbeddedCassandraServerHelper
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest._
+import org.scalatest.time.{Minute, Seconds, Span}
 import scala.concurrent.duration._
 
 trait CassandraSpec extends FlatSpec with BeforeAndAfterAll with BeforeAndAfterEach with ScalaFutures with Matchers {
@@ -17,7 +18,9 @@ trait CassandraSpec extends FlatSpec with BeforeAndAfterAll with BeforeAndAfterE
 
   private lazy val cluster = new Cluster.Builder().addContactPoints(host).withPort(port).build()
   implicit lazy val session: Session = cluster.connect()
-  implicit val patienceTimeout = org.scalatest.concurrent.PatienceConfiguration.Timeout(10.seconds)
+  implicit val patienceTimeout = org.scalatest.concurrent.PatienceConfiguration.Timeout(30.seconds)
+  implicit override val patienceConfig =
+    PatienceConfig(timeout = Span(1, Minute), interval = Span(5, Seconds))
 
   def testDataFixtures: String = ""
   private lazy val fixtures = StringCQLDataSet(testDataFixtures, false, false, "test")

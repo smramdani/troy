@@ -6,16 +6,19 @@ import troy.cql.ast.dml.Update._
 
 trait UpdateStatementParser {
   def updateStatement: Parser[UpdateStatement] = {
-    def assignment: Parser[Assignment] = {
+    val updateOperator: Parser[UpdateOperator] = {
+      import UpdateOperator._
+      def add = "+".i ^^^ Add
+      def subtract = "-".i ^^^ Subtract
+      add | subtract
+    }
 
+    def assignment: Parser[Assignment] = {
       def simpleSelectionAssignment =
         simpleSelection ~ ("=".i ~> term) ^^^^ SimpleSelectionAssignment
 
-      def termAssignment = {
-        val column1 = identifier <~ "=".i
-        val column2 = identifier <~ ("+".i | "-".i)
-        column1 ~ column2 ~ term ^^^^ TermAssignment
-      }
+      def termAssignment =
+        (identifier <~ "=".i) ~ identifier ~ updateOperator ~ term ^^^^ TermAssignment
 
       def listLiteralAssignment = {
         val column1 = identifier <~ "=".i

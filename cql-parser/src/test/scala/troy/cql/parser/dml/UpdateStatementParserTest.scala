@@ -51,6 +51,7 @@ class UpdateStatementParserTest extends FlatSpec with Matchers {
     val assignment1 = assignments(0).asInstanceOf[TermAssignment]
     assignment1.columnName1 shouldBe "total"
     assignment1.columnName2 shouldBe "total"
+    assignment1.updateOperator shouldBe UpdateOperator.Add
     assignment1.term.asInstanceOf[Constant].raw shouldBe "2"
 
     val relations = statement.where.relations

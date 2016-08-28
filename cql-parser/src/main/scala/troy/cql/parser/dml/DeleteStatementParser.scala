@@ -11,7 +11,7 @@ trait DeleteStatementParser {
     "DELETE".i ~>
       simpleSelections.? ~
       from ~
-      using.? ~
+      using ~
       where ~
       ifExistsOrCondition.? ^^^^ DeleteStatement.apply
   }

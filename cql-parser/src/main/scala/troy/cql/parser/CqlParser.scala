@@ -127,7 +127,7 @@ object CqlParser extends JavaTokenParsers
     timestamp | ttl
   }
 
-  def using = "USING".i ~> rep1sep(updateParam, "AND".i)
+  def using = getOrElse("USING".i ~> rep1sep(updateParam, "AND".i), Nil)
 
   def simpleSelection: Parser[SimpleSelection] = {
     def columnNameSelection = identifier ^^ ColumnNameSelection

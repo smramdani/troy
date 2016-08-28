@@ -30,7 +30,7 @@ trait UpdateStatementParser {
 
     "UPDATE".i ~>
       tableName ~
-      using.? ~
+      using ~
       set ~
       where ~
       ifExistsOrCondition.? ^^^^ UpdateStatement.apply

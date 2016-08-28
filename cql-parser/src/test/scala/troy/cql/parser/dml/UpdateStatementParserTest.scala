@@ -12,10 +12,9 @@ class UpdateStatementParserTest extends FlatSpec with Matchers {
   "Update Parser" should "parse simple update statement with simple set" in {
     val statement = parseQuery("UPDATE NerdMovies USING TTL 400 SET director = 'Joss Whedon', main_actor = 'Nathan Fillion',year = 2005WHERE movie = 'Serenity';").asInstanceOf[UpdateStatement]
     statement.tableName.table shouldBe "NerdMovies"
-    statement.using.isDefined shouldBe true
 
     statement.using.size shouldBe 1
-    val ttl = statement.using.get(0).asInstanceOf[Ttl]
+    val ttl = statement.using(0).asInstanceOf[Ttl]
     ttl.value.asInstanceOf[UpdateValue].value shouldBe "400"
 
     val assignments = statement.set

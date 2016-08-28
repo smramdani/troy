@@ -1,227 +1,123 @@
-/*
- * Copyright 2016 Tamer AbdulRadi
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package troy.schema
 
-import troy.cql.ast._
-import troy.cql.ast.ddl._
-import troy.cql.ast.dml._
+import troy.cql.ast.{ Identifier, KeyspaceName, TableName, CreateKeyspace, CreateTable, CreateIndex, DataType }
+import V.Implicits._
+import troy.cql.ast.ddl.Table.PrimaryKey
 
-import scala.util.Left
+case class Schema(keyspaces: Map[KeyspaceName, Keyspace]) extends AnyVal {
+  def getKeyspace(kn: Option[KeyspaceName]): Result[Keyspace] =
+    kn.toV(Messages.KeyspaceNotSpecified).flatMap(getKeyspace)
 
-trait Schema {
-  import Schema._
+  def getKeyspace(kn: KeyspaceName): Result[Keyspace] =
+    keyspaces.get(kn).toV(Messages.KeyspaceNotFound(kn))
 
-  def apply(statement: DataManipulation): Result[(RowType, VariableTypes)]
-  def +(statement: DataDefinition): Result[Schema]
-}
+  def getTable(tn: TableName): Result[Table] =
+    getKeyspace(tn.keyspace).flatMap(_.getTable(tn))
 
-case class SchemaImpl(schema: Map[KeyspaceName, Seq[CreateTable]], context: Option[KeyspaceName]) extends Schema {
-  import Schema._
+  def getColumns(tn: TableName): Result[Iterable[Column]] =
+    getTable(tn).map(_.columns.values)
 
-  override def apply(statement: DataManipulation) =
-    for {
-      rowType <- extractRowType(statement).right
-      variableTypes <- extractVariableTypes(statement).right
-      _ <- validate(statement).right
-    } yield (rowType, variableTypes)
+  def getColumns(tn: TableName, cs: Seq[Identifier]): Result[Seq[Column]] =
+    getTable(tn).flatMap(table => V.merge(cs.map(table.getColumn)))
 
-  private def extractRowType(query: DataManipulation): Result[RowType] = query match {
-    case stmt: SelectStatement =>
-      extractRowType(stmt)
-    case stmt: InsertStatement =>
-      extractRowType(stmt)
-    case _ =>
-      success(Columns(Seq.empty)) // TODO: Statements with If Not exists should return a row with a single boolean [applied flat]
-  }
-
-  private def validate(query: DataManipulation): Result[Unit] = success(())
-
-  private def extractRowType(query: SelectStatement): Result[RowType] = query match {
-    case SelectStatement(_, Select.Asterisk, table, _, _, _, _, _) =>
-      getAllColumns(table).right.map(cs => Asterisk(cs.map(_.dataType)))
-    case SelectStatement(_, Select.SelectClause(items), table, _, _, _, _, _) =>
-      apply(table, items.map(_.selector).map {
-        case Select.ColumnName(name) => name
-        case _                       => ???
-      }).right.map(RowType.fromColumns)
-  }
-
-  private def extractRowType(query: InsertStatement): Result[RowType] =
-    success(Columns(
-      if (query.ifNotExists)
-        Seq(DataType.boolean)
+  def apply(ck: CreateKeyspace): Result[Schema] =
+    if (keyspaces.contains(ck.keyspaceName))
+      if (ck.ifNotExists)
+        V.success(this, Messages.KeyspaceAlreadyExists(ck.keyspaceName))
       else
-        Seq.empty
-    ))
-
-  private def extractVariableTypes(statement: DataManipulation): Result[Seq[DataType]] = statement match {
-    case SelectStatement(_, _, from, Some(where), _, _, _, _)     => extractVariableTypes(from, where)
-    case SelectStatement(_, _, from, None, _, _, _, _)            => success(Seq.empty)
-    case InsertStatement(table, clause: Insert.NamesValues, _, _) => extractVariableTypes(table, clause)
-    case InsertStatement(table, clause: Insert.JsonClause, _, _)  => success(Seq.empty)
-    case _                                                        => ???
-  }
-
-  private def extractVariableTypes(table: TableName, where: WhereClause): Result[Seq[DataType]] =
-    for {
-      table <- getTable(table).right
-      dts <- extractVariableTypes(table, where).right
-    } yield dts
-
-  private def extractVariableTypes(table: CreateTable, where: WhereClause): Result[Seq[DataType]] =
-    // TODO: Handel all the inputs
-    Result.flattenSeq(where.relations.map {
-      case WhereClause.Relation.Simple(columnName, op, BindMarker.Anonymous) =>
-        import ColumnOps.Operations
-        for {
-          column <- getColumn(table, columnName).right
-          dt <- column.operandType(op).toRight(s"Operator '$op' doesn't support column type '${column.dataType}'").right
-        } yield Seq(dt)
-      case WhereClause.Relation.Tupled(identifiers, _, _) => ???
-      case WhereClause.Relation.Token(_, identifiers, _)  => ???
-    })
-
-  private def extractVariableTypes(table: TableName, insertClause: Insert.NamesValues): Result[Seq[DataType]] =
-    for {
-      table <- getTable(table).right
-      bindableColumns <- getColumns(
-        table,
-        (insertClause.columnNames zip insertClause.values.values).collect {
-          case (identifier, _: BindMarker) => identifier
-        }
-      ).right
-    } yield bindableColumns.map(_.dataType)
-
-  private def apply(table: TableName, columns: Seq[String]): Result[Seq[Table.Column]] =
-    getColumns(table.keyspace, table.table, columns)
-
-  private def resolveKeyspaceName(keyspaceName: Option[KeyspaceName]): Result[KeyspaceName] =
-    keyspaceName.orElse(context).toRight("Keyspace not specified")
-
-  private def getKeyspace(keyspaceName: KeyspaceName): Result[Seq[CreateTable]] =
-    schema.get(keyspaceName).toRight(s"Keyspace '${keyspaceName.name}' not found")
-
-  private def getKeyspace(keyspaceName: Option[KeyspaceName]): Result[Seq[CreateTable]] =
-    for {
-      keyspace <- resolveKeyspaceName(keyspaceName).right
-      tables <- getKeyspace(keyspace).right
-    } yield tables
-
-  private def getTable(keyspace: Seq[CreateTable], table: String): Result[CreateTable] =
-    keyspace.find(_.tableName.table == table).toRight(s"Table '$table' not found")
-
-  private def getTable(fullTableName: TableName): Result[CreateTable] =
-    getTable(fullTableName.keyspace, fullTableName.table)
-
-  private def getTable(keyspaceName: Option[KeyspaceName], tableName: String): Result[CreateTable] =
-    for {
-      tables <- getKeyspace(keyspaceName).right
-      table <- getTable(tables, tableName).right
-    } yield table
-
-  private def getColumn(table: CreateTable, columnName: Select.ColumnName): Result[Table.Column] =
-    getColumn(table, columnName.name)
-
-  private def getColumn(table: CreateTable, columnName: String): Result[Table.Column] =
-    table.columns.find(_.name == columnName).toRight(s"Column '$columnName' not found in table '${table.tableName}'")
-
-  private def getColumns(table: CreateTable, columnNames: Seq[String]): Result[Seq[Table.Column]] =
-    Result.seq(columnNames.map(getColumn(table, _)))
-
-  def getColumns(keyspaceName: Option[KeyspaceName], table: String, selectColumns: Seq[String]): Result[Seq[Table.Column]] =
-    for {
-      table <- getTable(keyspaceName, table).right
-      columns <- getColumns(table, selectColumns).right
-    } yield columns
-
-  private def getAllColumns(table: TableName): Result[Set[Table.Column]] =
-    getAllColumns(table.keyspace, table.table)
-
-  private def getAllColumns(keyspaceName: Option[KeyspaceName], table: String): Result[Set[Table.Column]] =
-    for {
-      table <- getTable(keyspaceName, table).right
-    } yield table.columns.toSet
-
-  override def +(stmt: DataDefinition) = stmt match {
-    case s: CreateKeyspace => withKeyspace(s)
-    case s: CreateTable    => withTable(s)
-    case s: CreateIndex    => success(this) // Indexes are ignored for now. TODO: https://github.com/tabdulradi/troy/issues/36
-    case _                 => ???
-  }
-
-  def keyspaceExists(keyspaceName: KeyspaceName) =
-    schema.keys.exists(_ == keyspaceName)
-
-  private def tableExists(tables: Seq[CreateTable], createTable: CreateTable) =
-    tables.exists(_.tableName.table == createTable.tableName.table)
-
-  def withKeyspace(keyspace: CreateKeyspace) =
-    if (keyspaceExists(keyspace.keyspaceName))
-      fail(s"Keyspace ${keyspace.keyspaceName.name} exists")
+        V.error(Messages.KeyspaceAlreadyExists(ck.keyspaceName))
     else
-      success(copy(schema = schema + (keyspace.keyspaceName -> Seq.empty)))
+      V.success(setKeyspace(Keyspace.empty(ck.keyspaceName)))
 
-  def withTable(createTable: CreateTable) =
-    for {
-      keyspace <- resolveKeyspaceName(createTable.tableName.keyspace).right
-      tables <- getKeyspace(keyspace).right
-      _ <- (if (tableExists(tables, createTable)) fail(s"Table ${createTable.tableName} already exists") else success).right
-    } yield copy(schema = schema + (keyspace -> (createTable +: tables)))
+  protected[this] def setKeyspace(k: Keyspace) =
+    copy(keyspaces + (k.name -> k))
+
+  def apply(ct: CreateTable): Result[Schema] =
+    getKeyspace(ct.tableName.keyspace).flatMap(_.apply(ct)).map(setKeyspace)
+
+  def apply(ci: CreateIndex): Result[Schema] =
+    getKeyspace(ci.tableName.keyspace).flatMap(_.apply(ci)).map(setKeyspace)
 }
 
-object Schema {
-  type Result[T] = Either[String, T]
+case class Keyspace(name: KeyspaceName, tables: Map[TableName, Table]) {
+  def getTable(table: TableName): Result[Table] =
+    tables.get(table).toV(Messages.TableNotFound(table))
 
-  sealed trait RowType
-  case class Asterisk(types: Set[DataType]) extends RowType
-  case class Columns(types: Seq[DataType]) extends RowType
-  object RowType {
-    def fromColumns(columns: Seq[Table.Column]): Columns =
-      Columns(columns.map(_.dataType))
-  }
+  def apply(ct: CreateTable): Result[Keyspace] =
+    if (tables.contains(ct.tableName))
+      if (ct.ifNotExists)
+        V.success(this, Messages.TableAlreadyExists(ct.tableName))
+      else
+        V.error(Messages.TableAlreadyExists(ct.tableName))
+    else
+      Table.fromStatement(ct).map(setTable)
 
-  type VariableTypes = Seq[DataType]
+  def apply(ci: CreateIndex): Result[Keyspace] =
+    getTable(ci.tableName).flatMap(_.apply(ci)).map(setTable)
 
-  object Result {
-    def seq[T](results: Seq[Result[T]]): Result[Seq[T]] =
-      results.collectFirst {
-        case Left(e) => fail(e)
-      }.getOrElse(success(results.map(_.right.get)))
+  def setTable(t: Table) =
+    copy(tables = tables + (t.name -> t))
+}
+object Keyspace {
+  def empty(name: KeyspaceName) = Keyspace(name, Map.empty)
+}
 
-    def flattenSeq[T](results: Seq[Result[Seq[T]]]): Result[Seq[T]] =
-      for {
-        s <- seq(results).right
-      } yield s.flatten
-  }
+case class Table(name: TableName, columns: Map[Identifier, Column], primaryKey: PrimaryKey) {
+  def getColumn(c: Identifier): Result[Column] =
+    columns.get(c).toV(Messages.ColumnNotFound(c, name))
 
-  private val empty: Schema = SchemaImpl(Map.empty, None)
+  def apply(ci: CreateIndex): Result[Table] =
+    getColumn(ci.identifier.columnName).flatMap(_.apply(ci)).map(setColumn)
 
-  def apply(statements: Seq[DataDefinition]) =
-    (success(empty) /: statements) {
-      case (Right(schema), statement) => schema + statement
-      case (Left(e), _)               => fail(e)
+  def setColumn(c: Column) = copy(columns = columns + (c.name -> c))
+}
+object Table {
+  def fromStatement(t: CreateTable): Result[Table] =
+    t.primaryKey
+      .orElse(t.columns.find(_.isPrimaryKey).map(c => PrimaryKey.simple(c.name)))
+      .toV(Messages.PrimaryKeyNotDefined(t.tableName))
+      .map { pk =>
+        val columnsMap = t.columns.map(c => c.name -> Column(c.name, c.dataType, c.isStatic)).toMap
+        Table(t.tableName, columnsMap, pk)
+      }
+}
+case class Column(name: String, dataType: DataType, isStatic: Boolean, valueIndexes: Set[Index] = Set.empty, keyIndexes: Set[Index] = Set.empty) {
+  def apply(ci: CreateIndex): Result[Column] =
+    ci.identifier match {
+      case _: troy.cql.ast.ddl.Index.Identifier => addValueIndex(ci)
+      case _: troy.cql.ast.ddl.Index.Keys       => addKeyIndex(ci)
     }
 
-  def fail[T](msg: String): Result[T] =
-    Left(msg)
+  def addValueIndex(ci: CreateIndex): Result[Column] =
+    validateIndex(ci, valueIndexes) { index =>
+      copy(valueIndexes = valueIndexes + index)
+    }
 
-  def success[T](result: T): Result[T] =
-    Right(result)
+  def addKeyIndex(ci: CreateIndex): Result[Column] =
+    validateIndex(ci, keyIndexes) { index =>
+      copy(keyIndexes = keyIndexes + index)
+    }
 
-  def success(): Result[_] =
-    Right(())
+  def validateIndex(ci: CreateIndex, indexes: Set[Index])(onSuccess: Index => Column): Result[Column] = {
+    val index = Index.fromStatement(ci)
+    if (indexes.contains(index))
+      if (ci.ifNotExists)
+        V.success(this, Messages.IndexAlreadyExists(ci.indexName, index, name))
+      else
+        V.error(Messages.IndexAlreadyExists(ci.indexName, index, name))
+    else
+      V.success(onSuccess(index))
+  }
+}
+
+sealed trait Index
+object Index {
+  case object Native extends Index
+  case object SASI extends Index
+  case object Custom extends Index
+
+  def fromStatement(ct: CreateIndex): Index = ct.using.map(_.using match {
+    case "org.apache.cassandra.index.sasi.SASIIndex" => SASI
+    case _                                           => Custom
+  }).getOrElse(Native)
 }

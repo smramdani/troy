@@ -16,7 +16,7 @@ trait CreateTableParser {
       def partitionKeys: Parser[Seq[String]] = simplePartitionKey | compositePartitionKey
       def clusteringColumns: Parser[Seq[String]] = ("," ~> rep1sep(identifier, ",")) orEmpty
 
-      "PRIMARY KEY".i ~> parenthesis(partitionKeys ~ clusteringColumns) ^^^^ PrimaryKey
+      "PRIMARY KEY".i ~> parenthesis(partitionKeys ~ clusteringColumns) ^^^^ PrimaryKey.apply
     }
 
     def option: Parser[CreateTableOption] = ??? // <property> | COMPACT STORAGE | CLUSTERING ORDER

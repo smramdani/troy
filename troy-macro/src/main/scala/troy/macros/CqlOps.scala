@@ -2,18 +2,19 @@ package troy.macros
 
 import java.io.InputStream
 import troy.cql.ast.CqlParser
-import troy.schema.Schema
+import troy.schema._
 import scala.io.Source
 
 object CqlOps {
+  import V.Implicits._
   val loadOrParseSchema = Memoize(parseSchemaFromFileName)
 
-  private def parseSchemaFromFileName(path: String): Schema.Result[Schema] =
+  private def parseSchemaFromFileName(path: String): Result[SchemaEngine] =
     Option(this.getClass.getResourceAsStream(path))
-      .map(parseSchemaFromInputStream)
-      .getOrElse(Schema.fail(s"Can't find schema file $path"))
+      .toV(Messages.SchemaNotFound(path))
+      .flatMap(parseSchemaFromInputStream)
 
-  private def parseSchemaFromInputStream(schemaFile: InputStream) =
+  private def parseSchemaFromInputStream(schemaFile: InputStream): Result[SchemaEngine] =
     parseSchemaFromSource(scala.io.Source.fromInputStream(schemaFile))
 
   private def parseSchemaFromSource(schema: Source) = {
@@ -22,20 +23,21 @@ object CqlOps {
     parseSchemaFromString(str)
   }
 
-  private def parseSchemaFromString(schema: String) =
+  private def parseSchemaFromString(schema: String): Result[SchemaEngine] =
     CqlParser.parseSchema(schema) match {
       case CqlParser.Success(result, _) =>
-        Schema(result)
+        SchemaEngine(result)
       case CqlParser.Failure(msg, next) =>
-        Schema.fail(s"Failure during parsing the schema. Error ($msg) near line ${next.pos.line}, column ${next.pos.column}")
+        V.error(Messages.SchemaParseFailure(msg, next.pos.line, next.pos.column))
     }
 
-  def parseQuery(queryString: String) = CqlParser.parseDML(queryString) match {
-    case CqlParser.Success(result, _) =>
-      Schema.success(result)
-    case CqlParser.Failure(msg, _) =>
-      Schema.fail(msg)
-  }
+  def parseQuery(queryString: String) =
+    CqlParser.parseDML(queryString) match {
+      case CqlParser.Success(result, _) =>
+        V.success(result)
+      case CqlParser.Failure(msg, next) =>
+        V.error(Messages.QueryParseFailure(msg, next.pos.line, next.pos.column))
+    }
 }
 
 case class Memoize[T, R](f: T => R) extends (T => R) {

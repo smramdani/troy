@@ -20,31 +20,31 @@ import troy.cql.ast._
 import org.scalatest._
 import troy.cql.ast.dml.Select
 import troy.cql.ast.SelectStatement
-import troy.cql.ast.ddl._
+import troy.cql.ast.ddl.{ Table => CqlTable, Keyspace => CqlKeyspace }
 
-class SchemaValidationTest extends FlatSpec with Matchers {
+class SchemaEngineValidationTest extends FlatSpec with Matchers {
 
   "Schema" should "fetch fields" in {
 
-    val authorId = Table.Column("author_id", DataType.text, false, false)
-    val authorName = Table.Column("author_name", DataType.text, true, false)
-    val authorAge = Table.Column("author_age", DataType.int, true, false)
-    val postId = Table.Column("post_id", DataType.text, false, false)
-    val postTitle = Table.Column("post_title", DataType.text, false, false)
+    val authorId = CqlTable.Column("author_id", DataType.text, false, false)
+    val authorName = CqlTable.Column("author_name", DataType.text, true, false)
+    val authorAge = CqlTable.Column("author_age", DataType.int, true, false)
+    val postId = CqlTable.Column("post_id", DataType.text, false, false)
+    val postTitle = CqlTable.Column("post_title", DataType.text, false, false)
 
-    val schema = Schema(Seq(
-      CreateKeyspace(false, KeyspaceName("test"), Seq(Keyspace.Replication(Seq(("class", "SimpleStrategy"), ("replication_factor", "1"))))),
+    val schema = SchemaEngine(Seq(
+      CreateKeyspace(false, KeyspaceName("test"), Seq(CqlKeyspace.Replication(Seq(("class", "SimpleStrategy"), ("replication_factor", "1"))))),
       CreateTable(false, TableName(Some(KeyspaceName("test")), "posts"), Seq(
         authorId,
         authorName,
         authorAge,
         postId,
         postTitle
-      ), Some(Table.PrimaryKey(Seq("author_id"), Seq("post_id"))), Nil)
-    )).right.get
+      ), Some(CqlTable.PrimaryKey(Seq("author_id"), Seq("post_id"))), Nil)
+    )).get
 
     schema(select(table("test", "posts"), "author_id", "author_name", "author_age", "post_id", "post_title"))
-      .right.get._1 shouldBe types(authorId, authorName, authorAge, postId, postTitle)
+      .get._1 shouldBe types(authorId, authorName, authorAge, postId, postTitle)
   }
 
   def table(keyspace: String, table: String) = TableName(Some(KeyspaceName(keyspace)), table)
@@ -55,5 +55,5 @@ class SchemaValidationTest extends FlatSpec with Matchers {
     SelectStatement(None, SelectClause(sci), table, None, None, None, None, false)
   }
 
-  def types(columns: Table.Column*) = Schema.Columns(columns.map(_.dataType))
+  def types(columns: CqlTable.Column*) = SchemaEngine.Columns(columns.map(_.dataType))
 }

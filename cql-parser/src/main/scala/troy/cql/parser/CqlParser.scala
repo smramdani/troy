@@ -130,9 +130,10 @@ object CqlParser extends JavaTokenParsers
   def using = getOrElse("USING".i ~> rep1sep(updateParam, "AND".i), Nil)
 
   def simpleSelection: Parser[SimpleSelection] = {
-    def columnNameSelection = identifier ^^ ColumnNameSelection
-    def columnNameSelectionWithTerm = identifier ~ squareBrackets(term) ^^^^ ColumnNameSelectionWithTerm
-    def columnNameSelectionWithFieldName = (identifier <~ ".") ~ "[a-zA-Z0-9_]+".r ^^^^ ColumnNameSelectionWithFieldName
+    import SimpleSelection._
+    def columnNameSelection = identifier ^^ ColumnName
+    def columnNameSelectionWithTerm = identifier ~ squareBrackets(term) ^^^^ ColumnNameOf
+    def columnNameSelectionWithFieldName = (identifier <~ ".") ~ "[a-zA-Z0-9_]+".r ^^^^ ColumnNameDot
 
     columnNameSelectionWithTerm | columnNameSelectionWithFieldName | columnNameSelection
   }

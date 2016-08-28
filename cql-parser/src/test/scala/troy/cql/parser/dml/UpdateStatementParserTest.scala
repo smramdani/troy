@@ -2,13 +2,13 @@ package troy.cql.parser.dml
 
 import org.scalatest.{ FlatSpec, Matchers }
 import troy.cql.ast.{ Constant, UpdateStatement }
-import troy.cql.ast.dml.{ ColumnNameSelection, Operator, Ttl, UpdateValue }
+import troy.cql.ast.dml._
 import troy.cql.ast.dml.Update._
 import troy.cql.ast.dml.WhereClause.Relation.Simple
 import troy.cql.parser.ParserTestUtils.parseQuery
 
 class UpdateStatementParserTest extends FlatSpec with Matchers {
-
+  import SimpleSelection._
   "Update Parser" should "parse simple update statement with simple set" in {
     val statement = parseQuery("UPDATE NerdMovies USING TTL 400 SET director = 'Joss Whedon', main_actor = 'Nathan Fillion',year = 2005WHERE movie = 'Serenity';").asInstanceOf[UpdateStatement]
     statement.tableName.table shouldBe "NerdMovies"
@@ -21,15 +21,15 @@ class UpdateStatementParserTest extends FlatSpec with Matchers {
     assignments.size shouldBe 3
 
     val assignment1 = assignments(0).asInstanceOf[SimpleSelectionAssignment]
-    assignment1.selection.asInstanceOf[ColumnNameSelection].columnName shouldBe "director"
+    assignment1.selection.asInstanceOf[ColumnName].columnName shouldBe "director"
     assignment1.term.asInstanceOf[Constant].raw shouldBe "Joss Whedon"
 
     val assignment2 = assignments(1).asInstanceOf[SimpleSelectionAssignment]
-    assignment2.selection.asInstanceOf[ColumnNameSelection].columnName shouldBe "main_actor"
+    assignment2.selection.asInstanceOf[ColumnName].columnName shouldBe "main_actor"
     assignment2.term.asInstanceOf[Constant].raw shouldBe "Nathan Fillion"
 
     val assignment3 = assignments(2).asInstanceOf[SimpleSelectionAssignment]
-    assignment3.selection.asInstanceOf[ColumnNameSelection].columnName shouldBe "year"
+    assignment3.selection.asInstanceOf[ColumnName].columnName shouldBe "year"
     assignment3.term.asInstanceOf[Constant].raw shouldBe "2005"
 
     val relations = statement.where.relations

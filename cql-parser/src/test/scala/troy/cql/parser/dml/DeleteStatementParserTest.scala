@@ -1,7 +1,7 @@
 package troy.cql.parser.dml
 
 import org.scalatest.{ FlatSpec, Matchers }
-import troy.cql.ast.dml.Delete.{ Exist, SimpleIfCondition }
+import troy.cql.ast.dml.{ IfExist, IfCondition }
 import troy.cql.ast.{ Constant, TupleLiteral }
 import troy.cql.ast.dml._
 import troy.cql.ast.dml.WhereClause.Relation.Simple
@@ -112,7 +112,7 @@ class DeleteStatementParserTest extends FlatSpec with Matchers {
     statement.from.table shouldBe "Users"
     statement.using.isEmpty shouldBe true
     statement.ifCondition.isDefined shouldBe true
-    statement.ifCondition.get.asInstanceOf[Exist].value shouldBe true
+    statement.ifCondition.get shouldBe IfExist
 
     val relations = statement.where.relations
     relations.size shouldBe 1
@@ -133,7 +133,7 @@ class DeleteStatementParserTest extends FlatSpec with Matchers {
     statement.using.isEmpty shouldBe true
 
     statement.ifCondition.isDefined shouldBe true
-    val conditions = statement.ifCondition.get.asInstanceOf[SimpleIfCondition].conditions
+    val conditions = statement.ifCondition.get.asInstanceOf[IfCondition].conditions
     conditions.size shouldBe 1
     val condition = conditions(0).asInstanceOf[Condition]
     condition.simpleSelection.asInstanceOf[ColumnNameSelection].columnName shouldBe "postcode"

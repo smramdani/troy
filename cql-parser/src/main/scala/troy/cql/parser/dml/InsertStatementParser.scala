@@ -35,6 +35,6 @@ trait InsertStatementParser {
       into ~
       insertClause ~
       ifNotExists ~
-      using.? ^^^^ InsertStatement.apply
+      using ^^^^ InsertStatement.apply
   }
 }

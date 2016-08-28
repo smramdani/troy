@@ -17,6 +17,9 @@ trait Helpers {
   def around[A](p: Parser[A], prefix: Parser[_], postfix: Parser[_]) =
     prefix ~> p <~ postfix
 
+  def getOrElse[A](p: Parser[A], a: A) =
+    p.?.map(_.getOrElse(a))
+
   implicit class orElse[A](p: Parser[A]) {
     def orElse[B >: A](default: => B): Parser[B] = p.? ^^ (_ getOrElse default)
   }

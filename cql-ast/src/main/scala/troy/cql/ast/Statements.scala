@@ -10,16 +10,16 @@ sealed trait DataManipulation extends Cql3Statement
 final case class DeleteStatement(
   simpleSelection: Option[Seq[SimpleSelection]],
   from: TableName,
-  using: Option[Seq[UpdateParam]],
+  using: Seq[UpdateParam],
   where: WhereClause,
-  ifCondition: Option[Delete.IfCondition]
+  ifCondition: Option[IfExistsOrCondition]
 ) extends DataManipulation
 
 final case class InsertStatement(
   into: TableName,
   insertClause: Insert.InsertClause,
   ifNotExists: Boolean,
-  using: Option[Seq[UpdateParam]]
+  using: Seq[UpdateParam]
 ) extends DataManipulation
 
 final case class SelectStatement(
@@ -31,6 +31,14 @@ final case class SelectStatement(
   perPartitionLimit: Option[Select.LimitParam],
   limit: Option[Select.LimitParam],
   allowFiltering: Boolean
+) extends DataManipulation
+
+final case class UpdateStatement(
+  tableName: TableName,
+  using: Seq[UpdateParam],
+  set: Seq[Update.Assignment],
+  where: WhereClause,
+  ifCondition: Option[IfExistsOrCondition]
 ) extends DataManipulation
 
 final case class CreateKeyspace(

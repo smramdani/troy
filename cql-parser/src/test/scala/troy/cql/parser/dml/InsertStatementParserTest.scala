@@ -73,10 +73,10 @@ class InsertStatementParserTest extends FlatSpec with Matchers {
     values(3).asInstanceOf[Constant].raw shouldBe "2005"
 
     statement.ifNotExists shouldBe false
-    statement.using.isDefined shouldBe true
+    statement.using.nonEmpty shouldBe true
 
     statement.using.size shouldBe 1
-    val ttl = statement.using.get(0).asInstanceOf[Ttl]
+    val ttl = statement.using(0).asInstanceOf[Ttl]
     ttl.value.asInstanceOf[UpdateValue].value shouldBe "86400"
   }
 
@@ -100,10 +100,10 @@ class InsertStatementParserTest extends FlatSpec with Matchers {
     values(3).asInstanceOf[Constant].raw shouldBe "2005"
 
     statement.ifNotExists shouldBe false
-    statement.using.isDefined shouldBe true
+    statement.using.nonEmpty shouldBe true
 
     statement.using.size shouldBe 1
-    val ttl = statement.using.get(0).asInstanceOf[Timestamp]
+    val ttl = statement.using(0).asInstanceOf[Timestamp]
     ttl.value.asInstanceOf[UpdateValue].value shouldBe "86400"
   }
 

@@ -16,12 +16,9 @@
 
 package troy
 
-import java.io.InputStream
-import scala.io.Source
 import scala.reflect.macros.blackbox.Context
-import troy.cql.ast.CqlParser
 import troy.cql.ast.DataType
-import troy.schema.Schema
+import troy.schema.{SchemaEngine, V, Result}
 
 package object macros {
   import CqlOps._
@@ -57,8 +54,8 @@ package object macros {
     val parser = expr match {
       case q"$root.as[..$paramTypes]($f)" =>
         val columnTypes = translateColumnTypes(c)(rowType match {
-          case Schema.Asterisk(_) => c.abort(c.enclosingPosition, "Troy doesn't support using .as with Select * queries")
-          case Schema.Columns(types) => types
+          case SchemaEngine.Asterisk(_) => c.abort(c.enclosingPosition, "Troy doesn't support using .as with Select * queries")
+          case SchemaEngine.Columns(types) => types
         })
         val params = (paramTypes zip columnTypes).zipWithIndex.map {
           case ((p, c), i) =>
@@ -170,7 +167,6 @@ package object macros {
   }
 
   private def translateColumnTypes(c: Context)(types: Seq[DataType]) = {
-    import c.universe._
     types map {
       case t: DataType.Native => translateNativeColumnType(c)(t)
       case t: DataType.Collection => translateCollectionColumnType(c)(t)
@@ -217,9 +213,14 @@ package object macros {
     }
   }
 
-  def getOrAbort[T](res: Schema.Result[T])(implicit c: Context) =
+  def getOrAbort[T](res: Result[T])(implicit c: Context) =
     res match {
-      case Right(data) => data
-      case Left(e)     => c.abort(c.enclosingPosition, e)
+      case V.Success(data, warns) =>
+        warns.foreach(w => c.warning(c.enclosingPosition, w.message))
+        data
+      case V.Error(errors, warns) =>
+        warns.foreach(w => c.warning(c.enclosingPosition, w.message))
+        errors.drop(1).foreach(e => c.error(c.enclosingPosition, e.message))
+        c.abort(c.enclosingPosition, errors.head.message)
     }
 }

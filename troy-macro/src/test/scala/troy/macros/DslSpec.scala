@@ -44,35 +44,35 @@ class DslSpec extends CassandraSpec {
     val q = withSchema { () =>
       cql"SELECT post_id, author_name, post_title FROM test.posts;".prepared.executeAsync.all.as(Post)
     }
-    val res: Future[Seq[Post]] = q()
+    q(): Future[Seq[Post]]
   }
 
   it should "support prepare & execute async" in {
     val q = withSchema { () =>
       cql"SELECT post_id, author_name, post_title FROM test.posts;".prepared.executeAsync.all.as(Post)
     }
-    val res: Future[Seq[Post]] = q()
+    q(): Future[Seq[Post]]
   }
 
   it should "support single param" in {
     val q = withSchema { (title: String) =>
       cql"SELECT post_id, author_name, post_title FROM test.posts WHERE post_title = $title;".prepared.executeAsync.all.as(Post)
     }
-    val res: Future[Seq[Post]] = q("")
+    q("test"): Future[Seq[Post]]
   }
 
   "The Macro" should "support returning the BoundStatement directly with no params" in {
     val q = withSchema { () =>
       cql"SELECT post_id, author_name, post_title FROM test.posts;".prepared
     }
-    val res: Statement = q()
+    q(): Statement
   }
 
   "The Macro" should "support returning the BoundStatement directly with params" in {
     val q = withSchema { (title: String) =>
       cql"SELECT post_id, author_name, post_title FROM test.posts WHERE post_title = $title;".prepared
     }
-    val res: Statement = q("")
+    q("test"): Statement
   }
 
   it should "support returning the ResultSet" in {
@@ -87,14 +87,14 @@ class DslSpec extends CassandraSpec {
     val q = withSchema { () =>
       cql"SELECT post_id, author_name, post_title FROM test.posts;".prepared.executeAsync
     }
-    val res: Future[ResultSet] = q()
+    q(): Future[ResultSet]
   }
 
   it should "support returning one element" in {
     val q = withSchema { () =>
       cql"SELECT post_id, author_name, post_title FROM test.posts;".prepared.executeAsync.oneOption
     }
-    val res: Future[Option[Row]] = q()
+    q(): Future[Option[Row]]
   }
   it should "allow specifying consistency level" in {
     withSchema { () =>
@@ -112,21 +112,21 @@ class DslSpec extends CassandraSpec {
     val q = withSchema { () =>
       cql"SELECT post_id, author_name, post_title FROM test.posts;".prepared.executeAsync.oneOption.as(Post)
     }
-    val res: Future[Option[Post]] = q()
+    q(): Future[Option[Post]]
   }
 
   it should "support parsing one row sync" in {
     val q = withSchema { () =>
       cql"SELECT post_id, author_name, post_title FROM test.posts;".prepared.execute.oneOption.as(Post)
     }
-    val res: Option[Post] = q()
+    q(): Option[Post]
   }
 
   it should "support select * with no params" in {
     val q = withSchema { () =>
       cql"SELECT * FROM test.posts;".prepared.execute.oneOption
     }
-    val res: Option[Row] = q()
+    q(): Option[Row]
   }
   //    TODO https://github.com/tabdulradi/troy/issues/37
   //  it should "support parsing select * with class/function matching the whole table" in {

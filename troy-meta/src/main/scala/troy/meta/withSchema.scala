@@ -3,7 +3,7 @@ package troy.meta
 import java.io.InputStream
 
 import troy.cql.ast.{DataType, CqlParser}
-import troy.schema.Schema
+import troy.schema.SchemaEngine$
 import scala.collection.immutable.Seq
 
 import scala.io.Source
@@ -94,7 +94,7 @@ class withSchema extends scala.annotation.StaticAnnotation {
     def parseSchemaFromString(schema: String) =
       CqlParser.parseSchema(schema) match {
         case CqlParser.Success(result, _) =>
-          Schema(result) match {
+          SchemaEngine(result) match {
             case Right(schema) => schema
             case Left(e)       => abort(e)
           }
@@ -159,8 +159,8 @@ class withSchema extends scala.annotation.StaticAnnotation {
     val parser = expr match {
       case q"$root.as[..$paramTypes](${f: Term.Name})" =>
         val columnTypes = translateColumnTypes(rowType match {
-          case Schema.Asterisk(_) => abort("Troy doesn't support using .as with Select * queries")
-          case Schema.Columns(types) => types
+          case SchemaEngine.Asterisk(_) => abort("Troy doesn't support using .as with Select * queries")
+          case SchemaEngine.Columns(types) => types
         }).toSeq
 
         val params = (paramTypes zip columnTypes).zipWithIndex.map {

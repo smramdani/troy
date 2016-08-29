@@ -11,7 +11,7 @@ sealed trait V[+W, +E, +S] extends Product with Serializable {
   def flatMap[WW >: W, EE >: E, SS](f: S => V[WW, EE, SS]): V[WW, EE, SS]
   def map[SS](f: S => SS): V[W, E, SS]
   def collect[EE >: E, SS](default: => EE)(pf: PartialFunction[S, SS]): V[W, EE, SS]
-  def addWarns[WW >: W](ws2: Seq[WW]): V[WW, E, S]
+  def addWarns[WW >: W](ws2: Iterable[WW]): V[WW, E, S]
   def get: S // Only for test cases
 }
 object V {
@@ -21,14 +21,14 @@ object V {
     override def map[SS](f: S => SS): V[W, Nothing, SS] = copy(f(value), ws)
     override def collect[EE, SS](default: => EE)(pf: PartialFunction[S, SS]): V[W, EE, SS] =
       pf.lift(value).toV(default)
-    override def addWarns[WW >: W](ws2: Seq[WW]): V[WW, Nothing, S] = copy(ws = ws ++ ws2)
+    override def addWarns[WW >: W](ws2: Iterable[WW]): V[WW, Nothing, S] = copy(ws = ws ++ ws2)
     override def get: S = value
   }
   final case class Error[+W, +E](es: Seq[E], ws: Seq[W] = Seq.empty) extends V[W, E, Nothing] {
     override def flatMap[WW >: W, EE >: E, SS](f: Nothing => V[WW, EE, SS]): V[WW, EE, SS] = this
     override def map[SS](f: Nothing => SS): V[W, E, SS] = this
     override def collect[EE >: E, SS](default: => EE)(pf: PartialFunction[Nothing, SS]): V[W, EE, SS] = this
-    override def addWarns[WW >: W](ws2: Seq[WW]): V[WW, E, Nothing] = copy(ws = ws ++ ws2)
+    override def addWarns[WW >: W](ws2: Iterable[WW]): V[WW, E, Nothing] = copy(ws = ws ++ ws2)
     override def get: Nothing = throw new NoSuchElementException(s"Error.get ${ws.mkString(", ")}")
   }
   def success[W, S](s: S, ws: W*) = Success(s, ws)

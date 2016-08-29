@@ -18,6 +18,7 @@ package troy.schema
 
 import troy.cql.ast._
 import troy.cql.ast.dml._
+import troy.schema.validation.Validations
 
 trait SchemaEngine {
   import SchemaEngine._
@@ -29,12 +30,14 @@ trait SchemaEngine {
 case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) extends SchemaEngine {
   import SchemaEngine._
 
+  private val validations = Validations(schema)
+
   override def apply(input: DataManipulation) = {
     val statement = enrichWithContext(input)
     for {
       rowType <- extractRowType(statement)
       variableTypes <- extractVariableTypes(statement)
-      _ <- validate(statement)
+      _ <- validations.validate(statement)
     } yield (rowType, variableTypes)
   }
 
@@ -45,13 +48,6 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
       extractRowType(stmt)
     case _ =>
       V.Success(Columns(Seq.empty))
-  }
-
-  private def validate(query: DataManipulation): Result[Unit] = query match {
-    case stmt: SelectStatement =>
-      validate(stmt)
-    case _ =>
-      V.Success(())
   }
 
   private def extractRowType(query: SelectStatement): Result[RowType] = query match {
@@ -71,37 +67,6 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
       else
         Seq.empty
     ))
-
-  private def validate(query: SelectStatement): Result[Unit] = V.success(())
-
-  //  private def validate(query: SelectStatement): Result[Unit] = query match {
-  //    case SelectStatement(_, _, _, _, _, _, _, true) =>
-  //      V.Success(())
-  //    case SelectStatement(_, _, table, Some(where), _, _, _, false) =>
-  //      val columnNames: Seq[Identifier] = where.relations.flatMap {
-  //        case WhereClause.Relation.Simple(columnName, _, _) =>
-  //          Seq(columnName)
-  //        case WhereClause.Relation.Tupled(columnNames, _, _) =>
-  //          columnNames
-  //        case WhereClause.Relation.Token(columnNames, _, _) =>
-  //          columnNames
-  //      }
-  //      val columns = getColumns(table.keyspace, table.table, columnNames)
-  //
-  //      //      val relations = where.relations
-  //      //      relations.match {
-  //      //        case Relation.Simple(columnName, _, _) =>
-  //      //          columnName.name.matches {
-  //      //            case pkey
-  //      //            case indx
-  //      //            case clastercol => check next relation
-  //      //          }
-  //      //      }
-  //
-  //      ???
-  //    case _ =>
-  //      V.Success(())
-  //  }
 
   private def extractVariableTypes(statement: DataManipulation): Result[Seq[DataType]] = statement match {
     case SelectStatement(_, _, from, Some(where), _, _, _, _)     => extractVariableTypes(from, where)

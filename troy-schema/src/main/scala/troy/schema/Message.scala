@@ -6,7 +6,7 @@ import troy.cql.ast.dml.Operator
 /**
  * Expresses an issue, can be interpreted as warn or error based on configured levels
  */
-sealed abstract class Message(val message: String)
+sealed abstract class Message(val message: String) extends Product
 object Messages {
   case object KeyspaceNotSpecified extends Message("Keyspace not specified")
   case class KeyspaceNotFound(k: KeyspaceName) extends Message(s"Keyspace '${k.name}' not found")

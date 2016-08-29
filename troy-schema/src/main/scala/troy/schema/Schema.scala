@@ -77,11 +77,13 @@ object Table {
       .orElse(t.columns.find(_.isPrimaryKey).map(c => PrimaryKey.simple(c.name)))
       .toV(Messages.PrimaryKeyNotDefined(t.tableName))
       .map { pk =>
-        val columnsMap = t.columns.map(c => c.name -> Column(c.name, c.dataType, c.isStatic)).toMap
+        val columnsMap = t.columns.map { c =>
+          c.name -> Column(c.name, c.dataType, c.isStatic, pk.partitionKeys.contains(c.name))
+        }.toMap
         Table(t.tableName, columnsMap, pk)
       }
 }
-case class Column(name: String, dataType: DataType, isStatic: Boolean, valueIndexes: Set[Index] = Set.empty, keyIndexes: Set[Index] = Set.empty) {
+case class Column(name: String, dataType: DataType, isStatic: Boolean, partOfPartitionKey: Boolean, valueIndexes: Set[Index] = Set.empty, keyIndexes: Set[Index] = Set.empty) {
   def apply(ci: CreateIndex): Result[Column] =
     ci.identifier match {
       case _: troy.cql.ast.ddl.Index.Identifier => addValueIndex(ci)
@@ -108,6 +110,12 @@ case class Column(name: String, dataType: DataType, isStatic: Boolean, valueInde
     else
       V.success(onSuccess(index))
   }
+
+  /**
+    * Either part of partition key or a static column
+    * which means this column can be selected by select distinct queries
+    */
+  def isPartitionLevel = partOfPartitionKey || isStatic
 }
 
 sealed trait Index

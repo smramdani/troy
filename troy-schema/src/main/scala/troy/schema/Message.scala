@@ -6,7 +6,7 @@ import troy.cql.ast.dml.Operator
 /**
  * Expresses an issue, can be interpreted as warn or error based on configured levels
  */
-sealed abstract class Message(val message: String)
+sealed abstract class Message(val message: String) extends Product
 object Messages {
   case object KeyspaceNotSpecified extends Message("Keyspace not specified")
   case class KeyspaceNotFound(k: KeyspaceName) extends Message(s"Keyspace '${k.name}' not found")
@@ -24,4 +24,7 @@ object Messages {
   case class SchemaNotFound(path: String) extends Message(s"Can't find schema file $path")
   case class SchemaParseFailure(msg: String, line: Int, column: Int) extends Message(s"Failure during parsing the schema. Error ($msg) near line $line, column $column")
   case class QueryParseFailure(msg: String, line: Int, column: Int) extends Message(s"Failure during parsing query. Error ($msg) near line $line, column $column")
+
+  // Validations
+  case class SelectedDistinctNonStaticColumn(c: Identifier) extends Message(s"SELECT DISTINCT queries must only request partition key columns and/or static columns (not $c)")
 }

@@ -90,7 +90,7 @@ class Usage extends CassandraSpec {
     createPost(AuthorAndPost(UUID.randomUUID(), UUID.randomUUID(), "Author", 5, "Title")).futureValue
   }
 
-  it should "support INSERT with if not exists flat" in {
+  it should "support INSERT with if not exists flag" in {
     val createPost = withSchema { (p: AuthorAndPost) =>
       cql"""
         INSERT INTO test.posts (author_id, post_id , author_name , post_rating, post_title)

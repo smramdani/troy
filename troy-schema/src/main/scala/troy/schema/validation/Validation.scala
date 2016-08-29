@@ -30,7 +30,8 @@ class Validations(schema: Schema, levelConfig: Message => Validations.Level) {
   def pairWithLevel(m: Message) = levelConfig(m) -> m
 
   val all = Seq(
-    new SelectDistinctNonStaticColumns(schema)
+    new SelectDistinctNonStaticColumns(schema),
+    new WhereNonPrimaryNoIndex(schema)
   )
 
   protected[this] val emptyResponse: Result[Unit] = V.success(())

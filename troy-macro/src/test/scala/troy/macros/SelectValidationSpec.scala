@@ -36,6 +36,30 @@ class SelectValidationSpec extends FreeSpec {
           cql"SELECT DISTINCT post_rating FROM test.posts;".prepared
         }
       """)
+
+      assertTypeError("""
+        withSchema { (postId: UUID) =>
+          cql"SELECT DISTINCT author_name, post_rating FROM test.posts;".prepared
+        }
+      """)
+
+      assertCompiles("""
+        withSchema { (postId: UUID) =>
+          cql"SELECT DISTINCT author_name FROM test.posts;".prepared
+        }
+      """)
+
+      assertCompiles("""
+        withSchema { (postId: UUID) =>
+          cql"SELECT DISTINCT author_id FROM test.posts;".prepared
+        }
+      """)
+
+      assertCompiles("""
+        withSchema { (postId: UUID) =>
+          cql"SELECT DISTINCT author_id, author_name FROM test.posts;".prepared
+        }
+      """)
     }
     //
     //    "allow query by partition key" in {

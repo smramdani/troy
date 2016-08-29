@@ -8,7 +8,12 @@ import troy.cql.ast.dml.Select._
 class SelectDistinctNonStaticColumns(schema: Schema) extends Validation {
   override def rules = {
     case SelectStatement(Some(Distinct), selection, from, _, _, _, _, _) =>
-      columnsInSelection(from, selection).map(_.filterNot(_.isStatic).map(_.name).map(SelectedDistinctNonStaticColumn))
+      columnsInSelection(from, selection).map { selectedColumns =>
+        selectedColumns
+          .filterNot(_.isPartitionLevel)
+          .map(_.name)
+          .map(SelectedDistinctNonStaticColumn)
+      }
   }
 
   def columnsInSelection(table: TableName, selection: Selection) = selection match {

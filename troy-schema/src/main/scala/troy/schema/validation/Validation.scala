@@ -29,7 +29,8 @@ class Validations(schema: Schema, levelConfig: Message => Validations.Level) {
 
   def pairWithLevel(m: Message) = levelConfig(m) -> m
 
-  val all = Seq[Validation](
+  val all = Seq(
+    new SelectDistinctNonStaticColumns(schema)
   )
 
   protected[this] val emptyResponse: Result[Unit] = V.success(())
@@ -44,5 +45,6 @@ object Validations {
   case object Off extends Level
 
   val levelConfig: Map[String, Level] = Map( // TODO: Read from config file
+    "SelectedDistinctNonStaticColumn" -> Error
   ).withDefaultValue(Error)
 }

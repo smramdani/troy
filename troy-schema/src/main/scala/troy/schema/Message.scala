@@ -24,4 +24,7 @@ object Messages {
   case class SchemaNotFound(path: String) extends Message(s"Can't find schema file $path")
   case class SchemaParseFailure(msg: String, line: Int, column: Int) extends Message(s"Failure during parsing the schema. Error ($msg) near line $line, column $column")
   case class QueryParseFailure(msg: String, line: Int, column: Int) extends Message(s"Failure during parsing query. Error ($msg) near line $line, column $column")
+
+  // Validations
+  case class SelectedDistinctNonStaticColumn(c: Identifier) extends Message(s"SELECT DISTINCT queries must only request partition key columns and/or static columns (not $c)")
 }

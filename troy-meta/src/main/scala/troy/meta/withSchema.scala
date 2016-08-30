@@ -3,7 +3,7 @@ package troy.meta
 import java.io.InputStream
 
 import troy.cql.ast.{DataType, CqlParser}
-import troy.schema.SchemaEngine$
+import troy.schema._
 import scala.collection.immutable.Seq
 
 import scala.io.Source
@@ -11,24 +11,19 @@ import scala.meta._
 
 class withSchema extends scala.annotation.StaticAnnotation {
   inline def apply(defn: Defn) = meta {
-    println(">>>>>>>>>>>>>>>>>>>>>>>>> 0")
+
     def findCqlQuery(expr: Term): (Seq[Term.Arg], Seq[Term.Arg]) = {
       println(expr)
       expr match {
         case query: Term.Interpolate if query.prefix.value == "cql" =>
-          println(">>>>>>>>>>>>>>>>>>>>>>>>> 2.1")
           (query.parts, query.args)
         case q"$expr.$tname" =>
-          println(">>>>>>>>>>>>>>>>>>>>>>>>> 2.2")
           findCqlQuery(expr)
         case q"$expr.$func[..$tpts]" =>
-          println(">>>>>>>>>>>>>>>>>>>>>>>>> 2.3")
           findCqlQuery(expr)
         case q"$expr.$func(..$exprss)"	=>
-          println(">>>>>>>>>>>>>>>>>>>>>>>>> 2.4")
           findCqlQuery(expr)
         case q"$expr.$func[..$tpts](..$exprss)"	=>
-          println(">>>>>>>>>>>>>>>>>>>>>>>>> 2.5")
           findCqlQuery(expr)
       }
     }
@@ -94,10 +89,7 @@ class withSchema extends scala.annotation.StaticAnnotation {
     def parseSchemaFromString(schema: String) =
       CqlParser.parseSchema(schema) match {
         case CqlParser.Success(result, _) =>
-          SchemaEngine(result) match {
-            case Right(schema) => schema
-            case Left(e)       => abort(e)
-          }
+          getOrAbort(SchemaEngine(result))
         case CqlParser.Failure(msg, next) =>
           abort(s"Failure during parsing the schema. Error ($msg) near line ${next.pos.line}, column ${next.pos.column}")
       }
@@ -108,6 +100,16 @@ class withSchema extends scala.annotation.StaticAnnotation {
       case CqlParser.Failure(msg, _) =>
         abort(msg)
     }
+
+    def getOrAbort[T](result: Result[T]) =
+      result match {
+        case V.Success(schema, warns) =>
+          warns.map(_.message).foreach(warn)
+          schema
+        case V.Error(e, warns) =>
+          warns.map(_.message).foreach(warn)
+          abort(e.head.message)
+      }
 
     def abort(msg: String) = throw new Exception(msg)
     def warn(msg: String) = println(msg)
@@ -151,10 +153,7 @@ class withSchema extends scala.annotation.StaticAnnotation {
 
     val query = parseQuery(rawQuery)
 
-    val (rowType, variableDataTypes) = schema(query) match {
-      case Right(data) => data
-      case Left(e)     => abort(e)
-    }
+    val (rowType, variableDataTypes) = getOrAbort(schema(query))
 
     val parser = expr match {
       case q"$root.as[..$paramTypes](${f: Term.Name})" =>

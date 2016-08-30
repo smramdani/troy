@@ -8,10 +8,10 @@ cql"SELECT post_id, post_title FROM test.posts WHERE author_id = $authorId".prep
 ```
 Validating them against your schema (defined under `resource/schema.cql`), and showing errors at *compile-time* like:
 > Main.scala:15: Column 'ops_typo' not found in table 'test.posts'
-OR 
+OR
 > Main.scala:15: Incompatible column type Int <--> troy.driver.CassandraDataType.Text
 
-Check our [examples](examples) for more usecases. 
+Check our [examples](examples) for more usecases.
 
 ## How to use
 
@@ -20,7 +20,7 @@ Check our [examples](examples) for more usecases.
 ```
 resolvers += Resolver.bintrayRepo("tabdulradi", "maven")
 
-libraryDependencies += "io.github.cassandra-scala" %% "troy" % "0.0.2"
+libraryDependencies += "io.github.cassandra-scala" %% "troy" % "0.3.0"
 ```
 
 ### 2. Add schema.cql files
@@ -60,18 +60,18 @@ val results: Future[Seq[Post]] = listByAuthor("test")
 ```
 Now Troy will
   1. Validate the Select query against the schema, if you are asking for columns that doesn't exists, *your code won't compile*
-  2. Manages parsing Cassandra `Row` into an instance of the class you provided. 
+  2. Manages parsing Cassandra `Row` into an instance of the class you provided.
 
 ## Compile-time Codec registery
 Troy wraps Cassandra's codecs in Typeclasses, to allow picking the correct codec at compile-time, rather than runtime.
 This is also extensible, by defining an implicit `HasTypeCodec[YourType, CassandraType]`.
 
 ### Optional columns
-Troy handles optional values automically, by wrapping Cassandra's codec with `null` checking. 
+Troy handles optional values automically, by wrapping Cassandra's codec with `null` checking.
 All you need to do is define your classes to contain `Option[T]` like.
 ```
 case class Post(id: UUID, title: Option[String])
-``` 
+```
 
 ## CQL Syntax
 Troy targets (but not fully implements) CQL v3.4.3

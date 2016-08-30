@@ -112,9 +112,9 @@ case class Column(name: String, dataType: DataType, isStatic: Boolean, partOfPar
   }
 
   /**
-    * Either part of partition key or a static column
-    * which means this column can be selected by select distinct queries
-    */
+   * Either part of partition key or a static column
+   * which means this column can be selected by select distinct queries
+   */
   def isPartitionLevel = partOfPartitionKey || isStatic
 }
 

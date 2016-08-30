@@ -6,10 +6,10 @@ import troy.cql.ast.DeleteStatement
 trait DeleteStatementParser {
   def deleteStatement: Parser[DeleteStatement] = {
     def from = "FROM" ~> tableName
-    val simpleSelections = rep1sep(simpleSelection, ",")
+    val simpleSelections = repsep(simpleSelection, ",")
 
     "DELETE".i ~>
-      simpleSelections.? ~
+      simpleSelections ~
       from ~
       using ~
       where ~

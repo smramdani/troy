@@ -30,7 +30,21 @@ class DeleteSpec extends FlatSpec with Matchers {
        author_name text static,
        post_rating int,
        post_title text,
+       comments map<int, text>,
        PRIMARY KEY ((author_id), post_id)
+     );
+
+     CREATE TABLE test.post_details (
+       author_id uuid,
+       id uuid,
+       rating int,
+       title text,
+       tags set<text>,
+       comment_ids set<int>,
+       comment_userIds list<uuid>,
+       comment_bodies list<text>,
+       comments map<int, text>,
+       PRIMARY KEY ((author_id), id)
      );
    """).get
   val schema = SchemaEngine(schemaStatements).get
@@ -74,6 +88,26 @@ class DeleteSpec extends FlatSpec with Matchers {
     val statement = parse("DELETE FROM test.posts WHERE author_id = ? IF post_title IN ?;")
     val (rowType, variableTypes) = schema(statement).get
     variableTypes shouldBe Seq(DataType.uuid, DataType.Tuple(Seq(DataType.text)))
+
+    val columnTypes = rowType.asInstanceOf[SchemaEngine.Columns].types
+    columnTypes.size shouldBe 1
+    columnTypes(0) shouldBe DataType.boolean
+  }
+
+  it should "delete statement with IF CONTAINS KEY condition" in {
+    val statement = parse("DELETE FROM test.posts WHERE author_id = ? IF comments CONTAINS KEY ?;")
+    val (rowType, variableTypes) = schema(statement).get
+    variableTypes shouldBe Seq(DataType.uuid, DataType.text)
+
+    val columnTypes = rowType.asInstanceOf[SchemaEngine.Columns].types
+    columnTypes.size shouldBe 1
+    columnTypes(0) shouldBe DataType.boolean
+  }
+
+  it should "delete statement with IF complex condition" in {
+    val statement = parse("DELETE FROM test.post_details WHERE author_id = ? IF comment_userIds CONTAINS ? AND comment_bodies CONTAINS ? AND rating = ?;")
+    val (rowType, variableTypes) = schema(statement).get
+    variableTypes shouldBe Seq(DataType.uuid, DataType.uuid, DataType.text, DataType.int)
 
     val columnTypes = rowType.asInstanceOf[SchemaEngine.Columns].types
     columnTypes.size shouldBe 1

@@ -127,34 +127,63 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
           case DataType.list(_)   => Seq(DataType.int)
           case DataType.map(k, _) => Seq(k)
         }
+      case _ => noVariables
     }
   private def extractVariablesFromUpdateParamValue(value: UpdateParamValue): Success[Nothing, DataType] = {
     value match {
       case UpdateVariable(_: BindMarker) => V.success(DataType.int)
+      case _                             => ???
     }
   }
+
   private def extractVariablesFromUpdateParam(table: Table, updateParam: Seq[UpdateParam]): Result[Seq[DataType]] =
     V.merge(updateParam.map {
       case Ttl(value: UpdateParamValue)       => extractVariablesFromUpdateParamValue(value)
       case Timestamp(value: UpdateParamValue) => extractVariablesFromUpdateParamValue(value)
     })
 
-  private def extractVariablesFromTerm(table: Table, term: Term /*, termType: DataType*/ ): Result[Seq[DataType]] =
-    noVariables
+  private def extractVariablesFromTerm(term: Term, termType: DataType): Result[Seq[DataType]] =
+    term match {
+      case BindMarker.Anonymous => V.success(Seq(termType))
+      case BindMarker.Named(_)  => V.success(Seq(termType))
+      case _                    => noVariables
+    }
 
-  private def extractVariablesFromCondition(table: Table, condition: Condition):Result[Seq[DataType]] =
-    condition match  {
-      case Condition(selection: SimpleSelection, operator: Operator, term: Term) =>
+  private def getExpectedTermTypeInCondition(table: Table, selection: SimpleSelection, operator: Operator): DataType = {
+    val selectionDataType: DataType = selection match {
+      case SimpleSelection.ColumnName(identifier)                  => table.getColumn(identifier).map(_.dataType).get
+      case SimpleSelection.ColumnNameOf(identifier, _: BindMarker) => extractVariablesFromSimpleSelection(table, selection).get(0)
+      case SimpleSelection.ColumnNameDot(identifier, _)            => table.getColumn(identifier).map(_.dataType).get
+    }
+
+    operator match {
+      case Operator.In => DataType.Tuple(Seq(selectionDataType))
+      case Operator.Contains =>
+        selectionDataType match {
+          case DataType.list(t)   => t
+          case DataType.set(t)    => t
+          case DataType.map(k, _) => k
+          case _                  => ???
+        }
+      case Operator.ContainsKey => DataType.text
+      case _                    => selectionDataType
+    }
+  }
+
+  private def extractVariablesFromCondition(table: Table, condition: Condition): Result[Seq[DataType]] =
+    condition match {
+      case Condition(selection: SimpleSelection, operator: Operator, term: Term) => {
         V.merge(Seq(
           extractVariablesFromSimpleSelection(table, selection),
-          extractVariablesFromTerm(table, term)
+          extractVariablesFromTerm(term, getExpectedTermTypeInCondition(table, selection, operator))
         )).map(_.flatten)
+      }
     }
 
   private def extractVariablesFromIfCondition(table: Table, ifCondition: Option[IfExistsOrCondition]): Result[Seq[DataType]] =
     V.merge(ifCondition.map {
       case IfCondition(conditions: Seq[Condition]) => conditions.map(extractVariablesFromCondition(table, _))
-      case IfExist => Seq(noVariables)
+      case IfExist                                 => Seq(noVariables)
     }.getOrElse(Seq(noVariables))).map(_.flatten)
 
   private val noVariables: Result[Seq[DataType]] = V.success(Seq.empty)

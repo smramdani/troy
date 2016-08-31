@@ -60,6 +60,26 @@ class DeleteSpec extends FlatSpec with Matchers {
     columnTypes(0) shouldBe DataType.boolean
   }
 
+  it should "delete statement with IF simple condition variables" in {
+    val statement = parse("DELETE FROM test.posts WHERE author_id = ? IF post_title = ?;")
+    val (rowType, variableTypes) = schema(statement).get
+    variableTypes shouldBe Seq(DataType.uuid, DataType.text)
+
+    val columnTypes = rowType.asInstanceOf[SchemaEngine.Columns].types
+    columnTypes.size shouldBe 1
+    columnTypes(0) shouldBe DataType.boolean
+  }
+
+  it should "delete statement with IF IN condition variables" in {
+    val statement = parse("DELETE FROM test.posts WHERE author_id = ? IF post_title IN ?;")
+    val (rowType, variableTypes) = schema(statement).get
+    variableTypes shouldBe Seq(DataType.uuid, DataType.Tuple(Seq(DataType.text)))
+
+    val columnTypes = rowType.asInstanceOf[SchemaEngine.Columns].types
+    columnTypes.size shouldBe 1
+    columnTypes(0) shouldBe DataType.boolean
+  }
+
   def parse(s: String) = CqlParser.parseDML(s) match {
     case CqlParser.Success(result, _) =>
       result

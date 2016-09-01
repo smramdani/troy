@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/cassandra-scala/troy.svg?branch=master)](https://travis-ci.org/cassandra-scala/troy)
 [![Gitter](https://badges.gitter.im/cassandra-scala/troy.svg)](https://gitter.im/cassandra-scala/troy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![Coverage Status](https://coveralls.io/repos/github/cassandra-scala/troy/badge.svg?branch=master)](https://coveralls.io/github/cassandra-scala/troy?branch=master)
 # What is Troy?
 
 Type-safe & compile-time-checked wrapper around the Cassandra driver. That allows you to write raw CQL queries like:

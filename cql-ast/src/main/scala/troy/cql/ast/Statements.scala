@@ -8,7 +8,7 @@ sealed trait DataDefinition extends Cql3Statement
 sealed trait DataManipulation extends Cql3Statement
 
 final case class DeleteStatement(
-  simpleSelection: Option[Seq[SimpleSelection]],
+  simpleSelection: Seq[SimpleSelection],
   from: TableName,
   using: Seq[UpdateParam],
   where: WhereClause,

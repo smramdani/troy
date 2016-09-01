@@ -3,6 +3,8 @@ package troy.cql.ast.dml
 import troy.cql.ast.{ Term, _ }
 
 sealed trait SimpleSelection
-final case class ColumnNameSelection(columnName: Identifier) extends SimpleSelection
-final case class ColumnNameSelectionWithTerm(columnName: Identifier, term: Term) extends SimpleSelection
-final case class ColumnNameSelectionWithFieldName(columnName: Identifier, fieldName: String) extends SimpleSelection
+object SimpleSelection {
+  final case class ColumnName(columnName: Identifier) extends SimpleSelection
+  final case class ColumnNameOf(columnName: Identifier, term: Term) extends SimpleSelection
+  final case class ColumnNameDot(columnName: Identifier, fieldName: String) extends SimpleSelection
+}

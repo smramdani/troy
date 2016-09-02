@@ -9,7 +9,7 @@ class AlterTableParserTest extends FlatSpec with Matchers {
   "Alter Table Parser" should "parse simple alter table" in {
     val statement = parseSchemaAs[AlterTable]("ALTER TABLE addamsFamily ALTER lastKnownLocation TYPE uuid;")
     statement.tableName.table shouldBe "addamsFamily"
-    val alterTableInstruction = statement.alterTableInstruction.asInstanceOf[Type]
+    val alterTableInstruction = statement.alterTableInstruction.asInstanceOf[AlterType]
     alterTableInstruction.columnName shouldBe "lastKnownLocation"
     alterTableInstruction.cqlType shouldBe DataType.uuid
   }
@@ -17,11 +17,11 @@ class AlterTableParserTest extends FlatSpec with Matchers {
   it should "parse simple alter table with add instruction" in {
     val statement = parseSchemaAs[AlterTable]("ALTER TABLE addamsFamily ADD gravesite varchar;")
     statement.tableName.table shouldBe "addamsFamily"
-    val alterTableInstruction = statement.alterTableInstruction.asInstanceOf[Add]
+    val alterTableInstruction = statement.alterTableInstruction.asInstanceOf[AddColumns]
     val addInstructions = alterTableInstruction.instructions
     addInstructions.size shouldBe 1
 
-    val addInstruction = addInstructions(0).asInstanceOf[AddInstruction]
+    val addInstruction = addInstructions(0)
     addInstruction.columnName shouldBe "gravesite"
     addInstruction.cqlType shouldBe DataType.varchar
   }
@@ -29,21 +29,21 @@ class AlterTableParserTest extends FlatSpec with Matchers {
   it should "parse simple alter table with drop instruction" in {
     val statement = parseSchemaAs[AlterTable]("ALTER TABLE addamsFamily DROP gravesite;")
     statement.tableName.table shouldBe "addamsFamily"
-    statement.alterTableInstruction.asInstanceOf[Drop].columnName shouldBe "gravesite"
+    statement.alterTableInstruction.asInstanceOf[DropColumn].columnName shouldBe "gravesite"
   }
 
   it should "parse simple alter table with many add instructions" in {
     val statement = parseSchemaAs[AlterTable]("ALTER TABLE addamsFamily ADD gravesite varchar, lastKnownLocation uuid;")
     statement.tableName.table shouldBe "addamsFamily"
-    val alterTableInstruction = statement.alterTableInstruction.asInstanceOf[Add]
+    val alterTableInstruction = statement.alterTableInstruction.asInstanceOf[AddColumns]
     val addInstructions = alterTableInstruction.instructions
     addInstructions.size shouldBe 2
 
-    val addInstruction1 = addInstructions(0).asInstanceOf[AddInstruction]
+    val addInstruction1 = addInstructions(0)
     addInstruction1.columnName shouldBe "gravesite"
     addInstruction1.cqlType shouldBe DataType.varchar
 
-    val addInstruction2 = addInstructions(1).asInstanceOf[AddInstruction]
+    val addInstruction2 = addInstructions(1)
     addInstruction2.columnName shouldBe "lastKnownLocation"
     addInstruction2.cqlType shouldBe DataType.uuid
   }

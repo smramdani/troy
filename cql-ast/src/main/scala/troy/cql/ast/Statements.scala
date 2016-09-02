@@ -68,6 +68,6 @@ final case class CreateIndex(
 
 final case class AlterTable(
   tableName: TableName,
-  AlterTableInstruction: Alter.AlterTableInstruction
+  alterTableInstruction: Alter.AlterTableInstruction
 ) extends DataDefinition
 

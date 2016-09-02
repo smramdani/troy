@@ -26,6 +26,12 @@ class AlterTableParserTest extends FlatSpec with Matchers {
     addInstruction.cqlType shouldBe DataType.varchar
   }
 
+  it should "parse simple alter table with drop instruction" in {
+    val statement = parseSchemaAs[AlterTable]("ALTER TABLE addamsFamily DROP gravesite;")
+    statement.tableName.table shouldBe "addamsFamily"
+    statement.alterTableInstruction.asInstanceOf[Drop].columnName shouldBe "gravesite"
+  }
+
   it should "parse simple alter table with many add instructions" in {
     val statement = parseSchemaAs[AlterTable]("ALTER TABLE addamsFamily ADD gravesite varchar, lastKnownLocation uuid;")
     statement.tableName.table shouldBe "addamsFamily"

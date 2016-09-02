@@ -18,7 +18,7 @@ trait AlterTableParser {
         "ADD".i ~> rep1sep(addInstruction, ",") ^^ Add
       }
 
-      def dropAlterInst = "DROP".i ~> rep1sep(identifier, "") ^^ Drop
+      def dropAlterInst = "DROP".i ~> identifier ^^ Drop // TODO: Check status of https://issues.apache.org/jira/browse/CASSANDRA-12603
       def withAlterInst = "WITH".i ~> rep1sep(optionInstruction, "AND") ^^ With
 
       typeAlterInst | addAlterInst | dropAlterInst | withAlterInst

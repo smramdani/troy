@@ -97,7 +97,7 @@ object CqlParser extends JavaTokenParsers
     def constantOption = identifier ~ ("=".i ~> constant) ^^^^ ConstantOption
     def mapLiteralOption = identifier ~ ("=".i ~> mapLiteral) ^^^^ MapLiteralOption
 
-    identifierOption | constantOption | mapLiteralOption
+    constantOption | mapLiteralOption | identifierOption
   }
 
   object Constants {

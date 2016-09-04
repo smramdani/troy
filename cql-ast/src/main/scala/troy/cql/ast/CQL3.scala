@@ -16,20 +16,6 @@
 
 package troy.cql.ast
 
-//
-//trait SchemaAlteringStatement
-
-//
-//case class KeyspaceReplication(`class`: String, replicationFactor: Int)
-//case class CreateKeyspaceStatement(name: String, replication: KeyspaceReplication) extends SchemaAlteringStatement
-//
-//trait CreateIndexStatement extends SchemaAlteringStatement
-//
-//trait ModificationStatement extends Statement
-//case class Insert extends ModificationStatement
-//case class Update extends ModificationStatement
-//case class Delete extends ModificationStatement
-
 trait ConsistencyLevel
 object ConsistencyLevel {
   case object Any extends ConsistencyLevel

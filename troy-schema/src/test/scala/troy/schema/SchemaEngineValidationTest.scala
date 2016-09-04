@@ -23,14 +23,14 @@ import troy.cql.ast.SelectStatement
 import troy.cql.ast.ddl.{ Table => CqlTable, Keyspace => CqlKeyspace }
 
 class SchemaEngineValidationTest extends FlatSpec with Matchers {
+  import VTestUtils._
 
   "Schema" should "fetch fields" in {
-
-    val authorId = CqlTable.Column("author_id", DataType.text, false, false)
-    val authorName = CqlTable.Column("author_name", DataType.text, true, false)
-    val authorAge = CqlTable.Column("author_age", DataType.int, true, false)
-    val postId = CqlTable.Column("post_id", DataType.text, false, false)
-    val postTitle = CqlTable.Column("post_title", DataType.text, false, false)
+    val authorId = CqlTable.Column("author_id", DataType.Text, false, false)
+    val authorName = CqlTable.Column("author_name", DataType.Text, true, false)
+    val authorAge = CqlTable.Column("author_age", DataType.Int, true, false)
+    val postId = CqlTable.Column("post_id", DataType.Text, false, false)
+    val postTitle = CqlTable.Column("post_title", DataType.Text, false, false)
 
     val schema = SchemaEngine(Seq(
       CreateKeyspace(false, KeyspaceName("test"), Seq(CqlKeyspace.Replication(Seq(("class", "SimpleStrategy"), ("replication_factor", "1"))))),

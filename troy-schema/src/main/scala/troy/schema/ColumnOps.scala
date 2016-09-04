@@ -16,13 +16,13 @@ object ColumnOps {
         }
       case Contains =>
         V.Success(column.dataType).collect(operatorNotSupported(operator)) {
-          case list(t)   => t
-          case set(t)    => t
-          case map(_, v) => v
+          case List(t)   => t
+          case Set(t)    => t
+          case Map(_, v) => v
         }
       case ContainsKey =>
         V.Success(column.dataType).collect(operatorNotSupported(operator)) {
-          case map(k, _) => k
+          case Map(k, _) => k
         }
     }
 

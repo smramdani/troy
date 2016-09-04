@@ -10,5 +10,5 @@ object Alter {
   final case class DropColumn(columnName: Identifier) extends AlterTableInstruction
   final case class With(options: Seq[OptionInstruction]) extends AlterTableInstruction
 
-  final case class AddInstruction(columnName: Identifier, cqlType: DataType)
+  final case class AddInstruction(columnName: Identifier, cqlType: DataType, isStatic: Boolean)
 }

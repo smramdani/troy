@@ -1,7 +1,9 @@
 package troy.schema
 
-import troy.cql.ast.{ Identifier, KeyspaceName, TableName, CreateKeyspace, CreateTable, CreateIndex, DataType }
+import troy.cql.ast._
 import V.Implicits._
+import troy.cql.ast.ddl.Alter
+import troy.cql.ast.ddl.Alter.{ AddInstruction, DropColumn, AddColumns, AlterType }
 import troy.cql.ast.ddl.Table.PrimaryKey
 
 case class Schema(keyspaces: Map[KeyspaceName, Keyspace]) extends AnyVal {
@@ -33,10 +35,16 @@ case class Schema(keyspaces: Map[KeyspaceName, Keyspace]) extends AnyVal {
     copy(keyspaces + (k.name -> k))
 
   def apply(ct: CreateTable): Result[Schema] =
-    getKeyspace(ct.tableName.keyspace).flatMap(_.apply(ct)).map(setKeyspace)
+    delegate(ct.tableName.keyspace, _(ct))
 
   def apply(ci: CreateIndex): Result[Schema] =
-    getKeyspace(ci.tableName.keyspace).flatMap(_.apply(ci)).map(setKeyspace)
+    delegate(ci.tableName.keyspace, _(ci))
+
+  def apply(at: AlterTable): Result[Schema] =
+    delegate(at.tableName.keyspace, _(at))
+
+  private[this] def delegate(ks: Option[KeyspaceName], f: Keyspace => Result[Keyspace]) =
+    getKeyspace(ks).flatMap(f).map(setKeyspace)
 }
 
 case class Keyspace(name: KeyspaceName, tables: Map[TableName, Table]) {
@@ -53,7 +61,13 @@ case class Keyspace(name: KeyspaceName, tables: Map[TableName, Table]) {
       Table.fromStatement(ct).map(setTable)
 
   def apply(ci: CreateIndex): Result[Keyspace] =
-    getTable(ci.tableName).flatMap(_.apply(ci)).map(setTable)
+    delegate(ci.tableName, _.apply(ci))
+
+  def apply(at: AlterTable): Result[Keyspace] =
+    delegate(at.tableName, _.apply(at))
+
+  private[this] def delegate(tn: TableName, f: Table => Result[Table]) =
+    getTable(tn).flatMap(f).map(setTable)
 
   def setTable(t: Table) =
     copy(tables = tables + (t.name -> t))
@@ -67,9 +81,44 @@ case class Table(name: TableName, columns: Map[Identifier, Column], primaryKey: 
     columns.get(c).toV(Messages.ColumnNotFound(c, name))
 
   def apply(ci: CreateIndex): Result[Table] =
-    getColumn(ci.identifier.columnName).flatMap(_.apply(ci)).map(setColumn)
+    delegate(ci.identifier.columnName, _.apply(ci))
 
-  def setColumn(c: Column) = copy(columns = columns + (c.name -> c))
+  def apply(at: AlterTable): Result[Table] =
+    at.alterTableInstruction match {
+      case AlterType(columnName, newCqlType) =>
+        delegate(columnName, _.alterType(newCqlType))
+      case AddColumns(instructions) =>
+        addColumns(instructions)
+      case DropColumn(columnName) =>
+        dropColumn(columnName)
+      case Alter.With(opions) =>
+        V.success(this) // options are not stored
+    }
+
+  private[this] def dropColumn(columnName: Identifier): Result[Table] =
+    for {
+      c <- getColumn(columnName) |?| Messages.CannotDropPrimaryKeyPart(columnName)
+      if !c.partOfPartitionKey
+    } yield copy(columns = columns - columnName)
+
+  private[this] def addColumns(instructions: Seq[AddInstruction]): Result[Table] =
+    V.merge(instructions.map(createColumn)).map(setColumns)
+
+  private[this] def createColumn(instruction: AddInstruction): Result[Column] =
+    V
+      .success(instruction.columnName)
+      .withDefaultError(Messages.ColumnAlreadyExists(name, instruction.columnName))
+      .filterNot(columns.keySet.contains)
+      .map(Column(_, instruction.cqlType, instruction.isStatic, partOfPartitionKey = false))
+
+  private[this] def delegate(cn: Identifier, f: Column => Result[Column]) =
+    getColumn(cn).flatMap(f).map(setColumn)
+
+  def setColumn(c: Column) =
+    copy(columns = columns + (c.name -> c))
+
+  def setColumns(cs: Seq[Column]) =
+    copy(columns = columns ++ cs.map(c => c.name -> c))
 }
 object Table {
   def fromStatement(t: CreateTable): Result[Table] =
@@ -89,6 +138,9 @@ case class Column(name: String, dataType: DataType, isStatic: Boolean, partOfPar
       case _: troy.cql.ast.ddl.Index.Identifier => addValueIndex(ci)
       case _: troy.cql.ast.ddl.Index.Keys       => addKeyIndex(ci)
     }
+
+  def alterType(newCqlType: DataType): Result[Column] =
+    V.success(copy(dataType = newCqlType))
 
   def addValueIndex(ci: CreateIndex): Result[Column] =
     validateIndex(ci, valueIndexes) { index =>

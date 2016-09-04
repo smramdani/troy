@@ -66,7 +66,7 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
   private def extractRowType(query: InsertStatement): Result[RowType] =
     V.Success(Columns(
       if (query.ifNotExists)
-        Seq(DataType.boolean)
+        Seq(DataType.Boolean)
       else
         Seq.empty
     ))
@@ -74,7 +74,7 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
   private def extractRowType(query: DeleteStatement): Result[RowType] =
     V.Success(Columns(
       if (query.ifCondition.isDefined)
-        Seq(DataType.boolean)
+        Seq(DataType.Boolean)
       else
         Seq.empty
     ))
@@ -124,14 +124,14 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
     selection match {
       case SimpleSelection.ColumnNameOf(identifier, _: BindMarker) =>
         table.getColumn(identifier).map(_.dataType).map {
-          case DataType.list(_)   => Seq(DataType.int)
-          case DataType.map(k, _) => Seq(k)
+          case DataType.List(_)   => Seq(DataType.Int)
+          case DataType.Map(k, _) => Seq(k)
         }
       case _ => noVariables
     }
   private def extractVariablesFromUpdateParamValue(value: UpdateParamValue): Success[Nothing, DataType] = {
     value match {
-      case UpdateVariable(_: BindMarker) => V.success(DataType.int)
+      case UpdateVariable(_: BindMarker) => V.success(DataType.Int)
       case _                             => ???
     }
   }
@@ -149,23 +149,23 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
       case _                    => noVariables
     }
 
-  private def getExpectedTermTypeInCondition(table: Table, selection: SimpleSelection, operator: Operator): DataType = {
-    val selectionDataType: DataType = selection match {
-      case SimpleSelection.ColumnName(identifier)                  => table.getColumn(identifier).map(_.dataType).get
-      case SimpleSelection.ColumnNameOf(identifier, _: BindMarker) => extractVariablesFromSimpleSelection(table, selection).get(0)
-      case SimpleSelection.ColumnNameDot(identifier, _)            => table.getColumn(identifier).map(_.dataType).get
+  private def getExpectedTermTypeInCondition(table: Table, selection: SimpleSelection, operator: Operator): Result[DataType] = {
+    val selectionDataType = selection match {
+      case SimpleSelection.ColumnName(identifier)                  => table.getColumn(identifier).map(_.dataType)
+      case SimpleSelection.ColumnNameOf(identifier, _: BindMarker) => extractVariablesFromSimpleSelection(table, selection).map(_.head)
+      case SimpleSelection.ColumnNameDot(identifier, _)            => table.getColumn(identifier).map(_.dataType)
     }
 
     operator match {
-      case Operator.In => DataType.Tuple(Seq(selectionDataType))
+      case Operator.In => selectionDataType.map(dt => DataType.Tuple(Seq(dt)))
       case Operator.Contains =>
-        selectionDataType match {
-          case DataType.list(t)   => t
-          case DataType.set(t)    => t
-          case DataType.map(k, _) => k
+        selectionDataType map {
+          case DataType.List(t)   => t
+          case DataType.Set(t)    => t
+          case DataType.Map(k, _) => k
           case _                  => ???
         }
-      case Operator.ContainsKey => DataType.text
+      case Operator.ContainsKey => V.success(DataType.Text)
       case _                    => selectionDataType
     }
   }
@@ -175,7 +175,7 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
       case Condition(selection: SimpleSelection, operator: Operator, term: Term) => {
         V.merge(Seq(
           extractVariablesFromSimpleSelection(table, selection),
-          extractVariablesFromTerm(term, getExpectedTermTypeInCondition(table, selection, operator))
+          getExpectedTermTypeInCondition(table, selection, operator).flatMap(extractVariablesFromTerm(term, _))
         )).map(_.flatten)
       }
     }
@@ -188,12 +188,14 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
 
   private val noVariables: Result[Seq[DataType]] = V.success(Seq.empty)
 
-  override def +(stmt: DataDefinition) = stmt match {
-    case s: CreateKeyspace => schema.apply(s).map(s => copy(s))
-    case s: CreateTable    => schema.apply(enrichWithContext(s)).map(s => copy(s))
-    case s: CreateIndex    => schema.apply(enrichWithContext(s)).map(s => copy(s))
-    case UseStatement(kn)  => V.success(copy(context = Some(kn)))
-  }
+  override def +(stmt: DataDefinition) =
+    validations.validate(stmt).map(_ => stmt) flatMap {
+      case s: CreateKeyspace => schema.apply(s).map(s => copy(s))
+      case s: CreateTable    => schema.apply(enrichWithContext(s)).map(s => copy(s))
+      case s: CreateIndex    => schema.apply(enrichWithContext(s)).map(s => copy(s))
+      case s: AlterTable     => schema.apply(s).map(s => copy(s))
+      case UseStatement(kn)  => V.success(copy(context = Some(kn)))
+    }
 
   private def enrichWithContext(tableName: TableName): TableName =
     tableName.copy(keyspace = tableName.keyspace.orElse(context))

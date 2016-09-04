@@ -22,6 +22,8 @@ import troy.cql.ast.ddl.{ Keyspace => CqlKeyspace, Table => CqlTable }
 import troy.cql.ast.dml.Select
 
 class DeleteSpec extends FlatSpec with Matchers {
+  import VTestUtils._
+
   val schemaStatements = CqlParser.parseSchema("""
      CREATE KEYSPACE test WITH replication = {'class': 'SimpleStrategy' , 'replication_factor': '1'};
      CREATE TABLE test.posts (
@@ -61,57 +63,57 @@ class DeleteSpec extends FlatSpec with Matchers {
     val (rowType, variableTypes) = schema(statement).get
     rowType.asInstanceOf[SchemaEngine.Columns].types.isEmpty shouldBe true
     variableTypes.size shouldBe 1
-    variableTypes(0) shouldBe DataType.uuid
+    variableTypes(0) shouldBe DataType.Uuid
   }
 
   it should "delete statement with IF EXISTS flag" in {
     val statement = parse("DELETE FROM test.posts WHERE author_id = ? IF EXISTS;")
     val (rowType, variableTypes) = schema(statement).get
-    variableTypes shouldBe Seq(DataType.uuid)
+    variableTypes shouldBe Seq(DataType.Uuid)
 
     val columnTypes = rowType.asInstanceOf[SchemaEngine.Columns].types
     columnTypes.size shouldBe 1
-    columnTypes(0) shouldBe DataType.boolean
+    columnTypes(0) shouldBe DataType.Boolean
   }
 
   it should "delete statement with IF simple condition variables" in {
     val statement = parse("DELETE FROM test.posts WHERE author_id = ? IF post_title = ?;")
     val (rowType, variableTypes) = schema(statement).get
-    variableTypes shouldBe Seq(DataType.uuid, DataType.text)
+    variableTypes shouldBe Seq(DataType.Uuid, DataType.Text)
 
     val columnTypes = rowType.asInstanceOf[SchemaEngine.Columns].types
     columnTypes.size shouldBe 1
-    columnTypes(0) shouldBe DataType.boolean
+    columnTypes(0) shouldBe DataType.Boolean
   }
 
   it should "delete statement with IF IN condition variables" in {
     val statement = parse("DELETE FROM test.posts WHERE author_id = ? IF post_title IN ?;")
     val (rowType, variableTypes) = schema(statement).get
-    variableTypes shouldBe Seq(DataType.uuid, DataType.Tuple(Seq(DataType.text)))
+    variableTypes shouldBe Seq(DataType.Uuid, DataType.Tuple(Seq(DataType.Text)))
 
     val columnTypes = rowType.asInstanceOf[SchemaEngine.Columns].types
     columnTypes.size shouldBe 1
-    columnTypes(0) shouldBe DataType.boolean
+    columnTypes(0) shouldBe DataType.Boolean
   }
 
   it should "delete statement with IF CONTAINS KEY condition" in {
     val statement = parse("DELETE FROM test.posts WHERE author_id = ? IF comments CONTAINS KEY ?;")
     val (rowType, variableTypes) = schema(statement).get
-    variableTypes shouldBe Seq(DataType.uuid, DataType.text)
+    variableTypes shouldBe Seq(DataType.Uuid, DataType.Text)
 
     val columnTypes = rowType.asInstanceOf[SchemaEngine.Columns].types
     columnTypes.size shouldBe 1
-    columnTypes(0) shouldBe DataType.boolean
+    columnTypes(0) shouldBe DataType.Boolean
   }
 
   it should "delete statement with IF complex condition" in {
     val statement = parse("DELETE FROM test.post_details WHERE author_id = ? IF comment_userIds CONTAINS ? AND comment_bodies CONTAINS ? AND rating = ?;")
     val (rowType, variableTypes) = schema(statement).get
-    variableTypes shouldBe Seq(DataType.uuid, DataType.uuid, DataType.text, DataType.int)
+    variableTypes shouldBe Seq(DataType.Uuid, DataType.Uuid, DataType.Text, DataType.Int)
 
     val columnTypes = rowType.asInstanceOf[SchemaEngine.Columns].types
     columnTypes.size shouldBe 1
-    columnTypes(0) shouldBe DataType.boolean
+    columnTypes(0) shouldBe DataType.Boolean
   }
 
   def parse(s: String) = CqlParser.parseDML(s) match {

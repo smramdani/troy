@@ -21,31 +21,31 @@ sealed trait DataType
 // TODO: frozen & UDT
 object DataType {
   sealed trait Native extends DataType
-  case object ascii extends Native
-  case object bigint extends Native
-  case object blob extends Native
-  case object boolean extends Native
-  case object counter extends Native
-  case object date extends Native
-  case object decimal extends Native
-  case object double extends Native
-  case object float extends Native
-  case object inet extends Native
-  case object int extends Native
-  case object smallint extends Native
-  case object text extends Native
-  case object times extends Native
-  case object timestamp extends Native
-  case object timeuuid extends Native
-  case object tinyint extends Native
-  case object uuid extends Native
-  case object varchar extends Native
-  case object varint extends Native
+  case object Ascii extends Native
+  case object BigInt extends Native
+  case object Blob extends Native
+  case object Boolean extends Native
+  case object Counter extends Native
+  case object Date extends Native
+  case object Decimal extends Native
+  case object Double extends Native
+  case object Float extends Native
+  case object Inet extends Native
+  case object Int extends Native
+  case object Smallint extends Native
+  case object Text extends Native
+  case object Time extends Native
+  case object Timestamp extends Native
+  case object Timeuuid extends Native
+  case object Tinyint extends Native
+  case object Uuid extends Native
+  case object Varchar extends Native
+  case object Varint extends Native
 
   sealed trait Collection extends DataType
-  final case class list(t: Native) extends Collection
-  final case class set(t: Native) extends Collection
-  final case class map(k: Native, v: Native) extends Collection
+  final case class List(t: Native) extends Collection
+  final case class Set(t: Native) extends Collection
+  final case class Map(k: Native, v: Native) extends Collection
 
   final case class Tuple(ts: Seq[DataType]) extends DataType
   final case class Custom(javaClass: String) extends DataType

@@ -4,7 +4,7 @@ import troy.cql.ast._
 import troy.cql.ast.dml.WhereClause
 import troy.schema.Schema
 
-class WhereNonPrimaryNoIndex(schema: Schema) extends Validation {
+class WhereNonPrimaryNoIndex(schema: Schema) extends Validation[DataManipulation] {
   override def rules = {
     case SelectStatement(_, _, from, Some(where), _, _, _, false) =>
       noMessages // TODO

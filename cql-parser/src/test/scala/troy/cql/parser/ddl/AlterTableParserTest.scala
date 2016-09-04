@@ -11,7 +11,7 @@ class AlterTableParserTest extends FlatSpec with Matchers {
     statement.tableName.table shouldBe "addamsFamily"
     val alterTableInstruction = statement.alterTableInstruction.asInstanceOf[AlterType]
     alterTableInstruction.columnName shouldBe "lastKnownLocation"
-    alterTableInstruction.cqlType shouldBe DataType.uuid
+    alterTableInstruction.cqlType shouldBe DataType.Uuid
   }
 
   it should "parse simple alter table with add instruction" in {
@@ -23,7 +23,7 @@ class AlterTableParserTest extends FlatSpec with Matchers {
 
     val addInstruction = addInstructions(0)
     addInstruction.columnName shouldBe "gravesite"
-    addInstruction.cqlType shouldBe DataType.varchar
+    addInstruction.cqlType shouldBe DataType.Varchar
   }
 
   it should "parse simple alter table with drop instruction" in {
@@ -41,11 +41,11 @@ class AlterTableParserTest extends FlatSpec with Matchers {
 
     val addInstruction1 = addInstructions(0)
     addInstruction1.columnName shouldBe "gravesite"
-    addInstruction1.cqlType shouldBe DataType.varchar
+    addInstruction1.cqlType shouldBe DataType.Varchar
 
     val addInstruction2 = addInstructions(1)
     addInstruction2.columnName shouldBe "lastKnownLocation"
-    addInstruction2.cqlType shouldBe DataType.uuid
+    addInstruction2.cqlType shouldBe DataType.Uuid
   }
 
   it should "parse simple alter table and with instruction" in {

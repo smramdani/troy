@@ -12,7 +12,7 @@ class CreateTableParserTest extends FlatSpec with Matchers {
     statement.tableName.keyspace.get.name shouldBe "test"
     statement.tableName.table shouldBe "posts"
     statement.columns.size shouldBe 1
-    statement.columns.head.dataType shouldBe DataType.text
+    statement.columns.head.dataType shouldBe DataType.Text
     statement.columns.head.isPrimaryKey shouldBe true
     statement.columns.head.isStatic shouldBe false
     statement.columns.head.name shouldBe "author_id"
@@ -28,7 +28,7 @@ class CreateTableParserTest extends FlatSpec with Matchers {
     )
     statement.ifNotExists shouldBe false
     statement.columns.size shouldBe 1
-    statement.columns.head.dataType shouldBe DataType.text
+    statement.columns.head.dataType shouldBe DataType.Text
     statement.columns.head.isPrimaryKey shouldBe true
     statement.columns.head.isStatic shouldBe false
     statement.columns.head.name shouldBe "author_id"
@@ -48,11 +48,11 @@ class CreateTableParserTest extends FlatSpec with Matchers {
     )
     statement.ifNotExists shouldBe false
     statement.columns shouldBe Seq(
-      Table.Column("author_id", DataType.text, false, true),
-      Table.Column("author_name", DataType.text, true, false),
-      Table.Column("author_age", DataType.int, true, false),
-      Table.Column("post_id", DataType.text, false, false),
-      Table.Column("post_title", DataType.text, false, false)
+      Table.Column("author_id", DataType.Text, false, true),
+      Table.Column("author_name", DataType.Text, true, false),
+      Table.Column("author_age", DataType.Int, true, false),
+      Table.Column("post_id", DataType.Text, false, false),
+      Table.Column("post_title", DataType.Text, false, false)
     )
     statement.primaryKey.isEmpty shouldBe true // Primary is defined inline instead
     statement.options.isEmpty shouldBe true
@@ -73,11 +73,11 @@ class CreateTableParserTest extends FlatSpec with Matchers {
     )
     statement.ifNotExists shouldBe false
     statement.columns shouldBe Seq(
-      Table.Column("author_id", DataType.text, false, false), // Yes, it is not THE primary key, only a partition key
-      Table.Column("author_name", DataType.text, true, false),
-      Table.Column("author_age", DataType.int, true, false),
-      Table.Column("post_id", DataType.text, false, false),
-      Table.Column("post_title", DataType.text, false, false)
+      Table.Column("author_id", DataType.Text, false, false), // Yes, it is not THE primary key, only a partition key
+      Table.Column("author_name", DataType.Text, true, false),
+      Table.Column("author_age", DataType.Int, true, false),
+      Table.Column("post_id", DataType.Text, false, false),
+      Table.Column("post_title", DataType.Text, false, false)
     )
     statement.primaryKey.get.partitionKeys shouldBe Seq("author_id")
     statement.primaryKey.get.clusteringColumns shouldBe Seq("post_id")

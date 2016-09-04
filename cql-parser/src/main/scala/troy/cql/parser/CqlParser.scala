@@ -192,33 +192,33 @@ object CqlParser extends JavaTokenParsers
   def condition = simpleSelection ~ operator ~ term ^^^^ Condition
 
   def dataType: Parser[DataType] = {
-    def ascii = "ascii".i ^^^ DataType.ascii
-    def bigint = "bigint".i ^^^ DataType.bigint
-    def blob = "blob".i ^^^ DataType.blob
-    def boolean = "boolean".i ^^^ DataType.boolean
-    def counter = "counter".i ^^^ DataType.counter
-    def date = "date".i ^^^ DataType.date
-    def decimal = "decimal".i ^^^ DataType.decimal
-    def double = "double".i ^^^ DataType.double
-    def float = "float".i ^^^ DataType.float
-    def inet = "inet".i ^^^ DataType.inet
-    def int = "int".i ^^^ DataType.int
-    def smallint = "smallint".i ^^^ DataType.smallint
-    def text = "text".i ^^^ DataType.text
-    def times = "times".i ^^^ DataType.times
-    def timestamp = "timestamp".i ^^^ DataType.timestamp
-    def timeuuid = "timeuuid".i ^^^ DataType.timeuuid
-    def tinyint = "tinyint".i ^^^ DataType.tinyint
-    def uuid = "uuid".i ^^^ DataType.uuid
-    def varchar = "varchar".i ^^^ DataType.varchar
-    def varint = "varint".i ^^^ DataType.varint
+    def ascii = "ascii".i ^^^ DataType.Ascii
+    def bigint = "bigint".i ^^^ DataType.BigInt
+    def blob = "blob".i ^^^ DataType.Blob
+    def boolean = "boolean".i ^^^ DataType.Boolean
+    def counter = "counter".i ^^^ DataType.Counter
+    def date = "date".i ^^^ DataType.Date
+    def decimal = "decimal".i ^^^ DataType.Decimal
+    def double = "double".i ^^^ DataType.Double
+    def float = "float".i ^^^ DataType.Float
+    def inet = "inet".i ^^^ DataType.Inet
+    def int = "int".i ^^^ DataType.Int
+    def smallint = "smallint".i ^^^ DataType.Smallint
+    def text = "text".i ^^^ DataType.Text
+    def time = "time".i ^^^ DataType.Time
+    def timestamp = "timestamp".i ^^^ DataType.Timestamp
+    def timeuuid = "timeuuid".i ^^^ DataType.Timeuuid
+    def tinyint = "tinyint".i ^^^ DataType.Tinyint
+    def uuid = "uuid".i ^^^ DataType.Uuid
+    def varchar = "varchar".i ^^^ DataType.Varchar
+    def varint = "varint".i ^^^ DataType.Varint
     def native: Parser[DataType.Native] =
-      ascii | bigint | blob | boolean | counter | date | decimal | double | float | inet | int | smallint | text | times | timestamp | timeuuid | tinyint | uuid | varchar | varint
+      ascii | bigint | blob | boolean | counter | date | decimal | double | float | inet | int | smallint | text | time | timestamp | timeuuid | tinyint | uuid | varchar | varint
 
-    def list = "list".i ~> '<' ~> native <~ '>' ^^ DataType.list
-    def set = "set".i ~> '<' ~> native <~ '>' ^^ DataType.set
+    def list = "list".i ~> '<' ~> native <~ '>' ^^ DataType.List
+    def set = "set".i ~> '<' ~> native <~ '>' ^^ DataType.Set
     def map = "map".i ~> '<' ~> native ~ (',' ~> native) <~ '>' ^^ {
-      case k ~ v => DataType.map(k, v)
+      case k ~ v => DataType.Map(k, v)
     }
     def collection: Parser[DataType.Collection] = list | set | map
 

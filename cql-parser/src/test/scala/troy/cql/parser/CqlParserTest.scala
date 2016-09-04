@@ -42,11 +42,11 @@ class CqlParserTest extends FlatSpec with Matchers {
     statements shouldBe Seq(
       CreateKeyspace(false, KeyspaceName("test"), Seq(Keyspace.Replication(Seq(("class", "SimpleStrategy"), ("replication_factor", "1"))))),
       CreateTable(false, TableName(Some(KeyspaceName("test")), "posts"), Seq(
-        Table.Column("author_id", DataType.text, false, false),
-        Table.Column("author_name", DataType.text, true, false),
-        Table.Column("author_age", DataType.int, true, false),
-        Table.Column("post_id", DataType.text, false, false),
-        Table.Column("post_title", DataType.text, false, false)
+        Table.Column("author_id", DataType.Text, false, false),
+        Table.Column("author_name", DataType.Text, true, false),
+        Table.Column("author_age", DataType.Int, true, false),
+        Table.Column("post_id", DataType.Text, false, false),
+        Table.Column("post_title", DataType.Text, false, false)
       ), Some(Table.PrimaryKey(Seq("author_id"), Seq("post_id"))), Nil)
     )
 

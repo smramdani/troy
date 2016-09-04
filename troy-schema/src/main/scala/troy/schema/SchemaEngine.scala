@@ -66,7 +66,7 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
   private def extractRowType(query: InsertStatement): Result[RowType] =
     V.Success(Columns(
       if (query.ifNotExists)
-        Seq(DataType.boolean)
+        Seq(DataType.Boolean)
       else
         Seq.empty
     ))
@@ -74,7 +74,7 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
   private def extractRowType(query: DeleteStatement): Result[RowType] =
     V.Success(Columns(
       if (query.ifCondition.isDefined)
-        Seq(DataType.boolean)
+        Seq(DataType.Boolean)
       else
         Seq.empty
     ))
@@ -124,14 +124,14 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
     selection match {
       case SimpleSelection.ColumnNameOf(identifier, _: BindMarker) =>
         table.getColumn(identifier).map(_.dataType).map {
-          case DataType.list(_)   => Seq(DataType.int)
-          case DataType.map(k, _) => Seq(k)
+          case DataType.List(_)   => Seq(DataType.Int)
+          case DataType.Map(k, _) => Seq(k)
         }
       case _ => noVariables
     }
   private def extractVariablesFromUpdateParamValue(value: UpdateParamValue): Success[Nothing, DataType] = {
     value match {
-      case UpdateVariable(_: BindMarker) => V.success(DataType.int)
+      case UpdateVariable(_: BindMarker) => V.success(DataType.Int)
       case _                             => ???
     }
   }
@@ -157,15 +157,15 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
     }
 
     operator match {
-      case Operator.In => DataType.Tuple(Seq(selectionDataType))
+      case Operator.In => selectionDataType.map(dt => DataType.Tuple(Seq(dt)))
       case Operator.Contains =>
         selectionDataType match {
-          case DataType.list(t)   => t
-          case DataType.set(t)    => t
-          case DataType.map(k, _) => k
+          case DataType.List(t)   => t
+          case DataType.Set(t)    => t
+          case DataType.Map(k, _) => k
           case _                  => ???
         }
-      case Operator.ContainsKey => DataType.text
+      case Operator.ContainsKey => DataType.Text
       case _                    => selectionDataType
     }
   }

@@ -37,7 +37,7 @@ trait SelectStatementParser {
       select_clause | asterisk
     }
 
-    def from = "FROM" ~> tableName
+    def from = "FROM".i ~> tableName
 
     def limitParam: Parser[Select.LimitParam] = {
       def limitValue = Constants.integer ^^ LimitValue

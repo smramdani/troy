@@ -14,6 +14,22 @@ sealed trait V[+W, +E, +S] extends Product with Serializable { self =>
   @inline def addWarns[WW >: W](ws2: Iterable[WW]): V[WW, E, S]
   @inline def withDefaultError[EE >: E](error: => EE) = new WithDefaultError(error)
   @inline def |?|[EE >: E](error: => EE) = withDefaultError(error)
+
+  class WithDefaultError[EE >: E](error: => EE) { selfWithError =>
+    def filter(p: S => Boolean): V[W, EE, S] =
+      flatMap(value => if (p(value)) self else V.error(error))
+
+    def filterNot(p: S => Boolean): V[W, EE, S] =
+      filter(s => !p(s))
+
+    def withFilter(p: S => Boolean) = new WithFilter(p)
+
+    class WithFilter(p: S => Boolean) {
+      def flatMap[WW >: W, EEE >: EE, SS](f: S => V[WW, EEE, SS]): V[WW, EEE, SS] = selfWithError filter p flatMap f
+      def map[SS](f: S => SS): V[W, EE, SS] = selfWithError filter p map f
+      def withFilter(q: S => Boolean): WithFilter = new WithFilter(x => p(x) && q(x))
+    }
+  }
 }
 object V {
   import Implicits._

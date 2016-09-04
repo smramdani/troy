@@ -7,28 +7,48 @@ package troy.schema
  * E = Error
  * W = Warn
  */
-sealed trait V[+W, +E, +S] extends Product with Serializable {
-  def flatMap[WW >: W, EE >: E, SS](f: S => V[WW, EE, SS]): V[WW, EE, SS]
-  def map[SS](f: S => SS): V[W, E, SS]
-  def collect[EE >: E, SS](default: => EE)(pf: PartialFunction[S, SS]): V[W, EE, SS]
-  def addWarns[WW >: W](ws2: Iterable[WW]): V[WW, E, S]
+sealed trait V[+W, +E, +S] extends Product with Serializable { self =>
+  @inline def flatMap[WW >: W, EE >: E, SS](f: S => V[WW, EE, SS]): V[WW, EE, SS]
+  @inline def map[SS](f: S => SS): V[W, E, SS]
+  @inline def collect[EE >: E, SS](default: => EE)(pf: PartialFunction[S, SS]): V[W, EE, SS]
+  @inline def addWarns[WW >: W](ws2: Iterable[WW]): V[WW, E, S]
+  @inline def withDefaultError[EE >: E](error: => EE) = new WithDefaultError(error)
+  @inline def |?|[EE >: E](error: => EE) = withDefaultError(error)
 }
 object V {
   import Implicits._
-  final case class Success[+W, +S](value: S, ws: Seq[W] = Seq.empty) extends V[W, Nothing, S] {
-    override def flatMap[WW >: W, EE, SS](f: S => V[WW, EE, SS]): V[WW, EE, SS] = f(value).addWarns(ws)
-    override def map[SS](f: S => SS): V[W, Nothing, SS] = copy(f(value), ws)
-    override def collect[EE, SS](default: => EE)(pf: PartialFunction[S, SS]): V[W, EE, SS] =
+
+  final case class Success[+W, +S](value: S, ws: Seq[W] = Seq.empty) extends V[W, Nothing, S] { self =>
+    @inline override def flatMap[WW >: W, EE, SS](f: S => V[WW, EE, SS]): V[WW, EE, SS] =
+      f(value).addWarns(ws)
+
+    @inline override def map[SS](f: S => SS): V[W, Nothing, SS] =
+      copy(f(value), ws)
+
+    @inline override def collect[EE, SS](default: => EE)(pf: PartialFunction[S, SS]): V[W, EE, SS] =
       pf.lift(value).toV(default)
-    override def addWarns[WW >: W](ws2: Iterable[WW]): V[WW, Nothing, S] = copy(ws = ws ++ ws2)
+
+    @inline override def addWarns[WW >: W](ws2: Iterable[WW]): V[WW, Nothing, S] =
+      copy(ws = ws ++ ws2)
   }
+
   final case class Error[+W, +E](es: Seq[E], ws: Seq[W] = Seq.empty) extends V[W, E, Nothing] {
-    override def flatMap[WW >: W, EE >: E, SS](f: Nothing => V[WW, EE, SS]): V[WW, EE, SS] = this
-    override def map[SS](f: Nothing => SS): V[W, E, SS] = this
-    override def collect[EE >: E, SS](default: => EE)(pf: PartialFunction[Nothing, SS]): V[W, EE, SS] = this
-    override def addWarns[WW >: W](ws2: Iterable[WW]): V[WW, E, Nothing] = copy(ws = ws ++ ws2)
+    @inline override def flatMap[WW >: W, EE >: E, SS](f: Nothing => V[WW, EE, SS]): V[WW, EE, SS] =
+      this
+
+    @inline override def map[SS](f: Nothing => SS): V[W, E, SS] =
+      this
+
+    @inline override def collect[EE >: E, SS](default: => EE)(pf: PartialFunction[Nothing, SS]): V[W, EE, SS] =
+      this
+
+    @inline override def addWarns[WW >: W](ws2: Iterable[WW]): V[WW, E, Nothing] =
+      copy(ws = ws ++ ws2)
   }
-  def success[W, S](s: S, ws: W*) = Success(s, ws)
+
+  def success[W, S](s: S, ws: W*) =
+    Success(s, ws)
+
   def error[W, E](e: E, warnings: Seq[W] = Seq.empty) = Error(Seq(e), warnings)
 
   def merge[W, E, S](vs: Seq[V[W, E, S]]) = vs.foldLeft[V[W, E, Seq[S]]](Success(Seq.empty)) {

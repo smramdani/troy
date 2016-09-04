@@ -23,6 +23,7 @@ import troy.cql.ast.SelectStatement
 import troy.cql.ast.ddl.{ Table => CqlTable, Keyspace => CqlKeyspace }
 
 class SchemaEngineValidationTest extends FlatSpec with Matchers {
+  import VTestUtils._
 
   "Schema" should "fetch fields" in {
     val authorId = CqlTable.Column("author_id", DataType.Text, false, false)

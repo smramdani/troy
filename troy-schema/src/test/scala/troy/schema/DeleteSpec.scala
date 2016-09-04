@@ -22,6 +22,8 @@ import troy.cql.ast.ddl.{ Keyspace => CqlKeyspace, Table => CqlTable }
 import troy.cql.ast.dml.Select
 
 class DeleteSpec extends FlatSpec with Matchers {
+  import VTestUtils._
+
   val schemaStatements = CqlParser.parseSchema("""
      CREATE KEYSPACE test WITH replication = {'class': 'SimpleStrategy' , 'replication_factor': '1'};
      CREATE TABLE test.posts (

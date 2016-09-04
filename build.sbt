@@ -16,7 +16,7 @@ lazy val cqlParser = project
 lazy val troySchema = project
   .in(file("troy-schema"))
   .settings(name := "troy-schema")
-  .dependsOn(cqlParser)
+  .dependsOn(cqlParser % "test->test;compile->compile")
   .settings(libraryDependencies ++= Vector(
     Library.scalaTest % Test
   ))

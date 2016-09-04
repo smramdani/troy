@@ -149,23 +149,23 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
       case _                    => noVariables
     }
 
-  private def getExpectedTermTypeInCondition(table: Table, selection: SimpleSelection, operator: Operator): DataType = {
-    val selectionDataType: DataType = selection match {
-      case SimpleSelection.ColumnName(identifier)                  => table.getColumn(identifier).map(_.dataType).get
-      case SimpleSelection.ColumnNameOf(identifier, _: BindMarker) => extractVariablesFromSimpleSelection(table, selection).get(0)
-      case SimpleSelection.ColumnNameDot(identifier, _)            => table.getColumn(identifier).map(_.dataType).get
+  private def getExpectedTermTypeInCondition(table: Table, selection: SimpleSelection, operator: Operator): Result[DataType] = {
+    val selectionDataType = selection match {
+      case SimpleSelection.ColumnName(identifier)                  => table.getColumn(identifier).map(_.dataType)
+      case SimpleSelection.ColumnNameOf(identifier, _: BindMarker) => extractVariablesFromSimpleSelection(table, selection).map(_.head)
+      case SimpleSelection.ColumnNameDot(identifier, _)            => table.getColumn(identifier).map(_.dataType)
     }
 
     operator match {
       case Operator.In => selectionDataType.map(dt => DataType.Tuple(Seq(dt)))
       case Operator.Contains =>
-        selectionDataType match {
+        selectionDataType map {
           case DataType.List(t)   => t
           case DataType.Set(t)    => t
           case DataType.Map(k, _) => k
           case _                  => ???
         }
-      case Operator.ContainsKey => DataType.Text
+      case Operator.ContainsKey => V.success(DataType.Text)
       case _                    => selectionDataType
     }
   }
@@ -175,7 +175,7 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
       case Condition(selection: SimpleSelection, operator: Operator, term: Term) => {
         V.merge(Seq(
           extractVariablesFromSimpleSelection(table, selection),
-          extractVariablesFromTerm(term, getExpectedTermTypeInCondition(table, selection, operator))
+          getExpectedTermTypeInCondition(table, selection, operator).flatMap(extractVariablesFromTerm(term, _))
         )).map(_.flatten)
       }
     }

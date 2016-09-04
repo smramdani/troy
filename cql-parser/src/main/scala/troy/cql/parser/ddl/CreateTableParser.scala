@@ -8,7 +8,7 @@ trait CreateTableParser {
   def createTable: Parser[CreateTable] = {
     def createTable = "create".i ~> ("table".i | "columnfamily".i)
 
-    def columnDefinition: Parser[Column] = identifier ~ dataType ~ "STATIC".flag ~ "PRIMARY KEY".flag ^^^^ Column
+    def columnDefinition: Parser[Column] = identifier ~ dataType ~ staticFlag ~ "PRIMARY KEY".flag ^^^^ Column
 
     def primaryKeyDefinition: Parser[PrimaryKey] = {
       def simplePartitionKey = identifier.asSeq

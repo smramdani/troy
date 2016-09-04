@@ -227,6 +227,8 @@ object CqlParser extends JavaTokenParsers
     native | collection | tuple // | custom // TODO
   }
 
+  def staticFlag = "STATIC".flag
+
   implicit class MyRichString(val str: String) extends AnyVal {
     // Ignore case
     def i: Parser[String] = ("""(?i)\Q""" + str + """\E""").r

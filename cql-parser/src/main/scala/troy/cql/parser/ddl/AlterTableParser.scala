@@ -14,7 +14,7 @@ trait AlterTableParser {
       }
 
       def addAlterInst = {
-        def addInstruction = identifier ~ dataType ^^^^ AddInstruction
+        def addInstruction = identifier ~ dataType ~ staticFlag ^^^^ AddInstruction
         "ADD".i ~> rep1sep(addInstruction, ",") ^^ AddColumns
       }
 

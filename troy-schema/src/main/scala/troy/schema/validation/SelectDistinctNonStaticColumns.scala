@@ -5,7 +5,7 @@ import troy.schema.Schema
 import troy.cql.ast._
 import troy.cql.ast.dml.Select._
 
-class SelectDistinctNonStaticColumns(schema: Schema) extends Validation {
+class SelectDistinctNonStaticColumns(schema: Schema) extends Validation[DataManipulation] {
   override def rules = {
     case SelectStatement(Some(Distinct), selection, from, _, _, _, _, _) =>
       columnsInSelection(from, selection).map { selectedColumns =>

@@ -3,20 +3,24 @@ package troy.schema.validation
 import troy.cql.ast.DataManipulation
 import troy.schema._
 
-trait Validation {
-  def validate(statement: DataManipulation): Result[Iterable[Message]] =
-    rules.applyOrElse(statement, (_: DataManipulation) => noMessages)
+trait Validation[-T] {
+  def validate(statement: T): Result[Iterable[Message]] =
+    rules.applyOrElse(statement, (_: T) => noMessages)
 
-  protected[this] def rules: PartialFunction[DataManipulation, Result[Iterable[Message]]]
+  protected[this] def rules: PartialFunction[T, Result[Iterable[Message]]]
 
   protected[this] val noMessages: Result[Seq[Message]] = V.success(Seq.empty)
 }
 
 class Validations(schema: Schema, levelConfig: Message => Validations.Level) {
   def validate(statement: DataManipulation): Result[_] =
-    V.merge(all.map(_.validate(statement).flatMap(adjustMessageLevels)))
+    validate(dmValidations, statement)
 
   def adjustMessageLevels(msgs: Iterable[Message]) = {
+  protected[this] def validate[T](validations: Seq[Validation[T]], statement: T): Result[_] =
+    V.merge(validations.map(_.validate(statement).flatMap(adjustMessageLevels)))
+
+  protected[this] def adjustMessageLevels(msgs: Iterable[Message]) = {
     val groupedMsgs = groupByLevel(msgs)
     val warns = groupedMsgs.getOrElse(Validations.Warn, Iterable.empty)
     val errors = groupedMsgs.getOrElse(Validations.Error, Iterable.empty)
@@ -24,12 +28,12 @@ class Validations(schema: Schema, levelConfig: Message => Validations.Level) {
     V.merge(emptyResponse.addWarns(warns) +: errors.map(e => V.error(e)).toSeq)
   }
 
-  def groupByLevel(msgs: Iterable[Message]) =
+  protected[this] def groupByLevel(msgs: Iterable[Message]) =
     msgs.map(pairWithLevel).groupBy(_._1).mapValues(_.map(_._2))
 
-  def pairWithLevel(m: Message) = levelConfig(m) -> m
+  protected[this] def pairWithLevel(m: Message) = levelConfig(m) -> m
 
-  val all = Seq(
+  protected[this] val dmValidations = Seq(
     new SelectDistinctNonStaticColumns(schema),
     new WhereNonPrimaryNoIndex(schema)
   )

@@ -17,6 +17,9 @@ object Messages {
   case class KeyspaceAlreadyExists(k: KeyspaceName) extends Message(s"Keyspace $k already exists")
   case class TableAlreadyExists(t: TableName) extends Message(s"Table $t already exists")
   case class IndexAlreadyExists(name: Option[String], index: Index, on: String) extends Message(s"Index ${name.getOrElse("")} of type $index already exists on $on")
+  case class ColumnAlreadyExists(t: TableName, c: Identifier) extends Message(s"Invalid column name $c because it conflicts with an existing column in table $t")
+
+  case class CannotDropPrimaryKeyPart(c: Identifier) extends Message(s"Cannot drop PRIMARY KEY part $c")
 
   case class PrimaryKeyNotDefined(t: TableName) extends Message(s"CREATE TABLE $t statement has no Primary key defined")
 

@@ -189,11 +189,12 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
   private val noVariables: Result[Seq[DataType]] = V.success(Seq.empty)
 
   override def +(stmt: DataDefinition) = stmt match {
-    case s: CreateKeyspace => schema.apply(s).map(s => copy(s))
-    case s: CreateTable    => schema.apply(enrichWithContext(s)).map(s => copy(s))
-    case s: CreateIndex    => schema.apply(enrichWithContext(s)).map(s => copy(s))
-    case UseStatement(kn)  => V.success(copy(context = Some(kn)))
-  }
+      case s: CreateKeyspace => schema.apply(s).map(s => copy(s))
+      case s: CreateTable    => schema.apply(enrichWithContext(s)).map(s => copy(s))
+      case s: CreateIndex    => schema.apply(enrichWithContext(s)).map(s => copy(s))
+      case s: AlterTable     => schema.apply(s).map(s => copy(s))
+      case UseStatement(kn)  => V.success(copy(context = Some(kn)))
+    }
 
   private def enrichWithContext(tableName: TableName): TableName =
     tableName.copy(keyspace = tableName.keyspace.orElse(context))

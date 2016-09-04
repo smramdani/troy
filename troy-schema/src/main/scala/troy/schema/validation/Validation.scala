@@ -1,6 +1,6 @@
 package troy.schema.validation
 
-import troy.cql.ast.DataManipulation
+import troy.cql.ast.{ DataDefinition, DataManipulation }
 import troy.schema._
 
 trait Validation[-T] {
@@ -16,7 +16,9 @@ class Validations(schema: Schema, levelConfig: Message => Validations.Level) {
   def validate(statement: DataManipulation): Result[_] =
     validate(dmValidations, statement)
 
-  def adjustMessageLevels(msgs: Iterable[Message]) = {
+  def validate(statement: DataDefinition): Result[_] =
+    validate(ddValidations, statement)
+
   protected[this] def validate[T](validations: Seq[Validation[T]], statement: T): Result[_] =
     V.merge(validations.map(_.validate(statement).flatMap(adjustMessageLevels)))
 
@@ -36,6 +38,10 @@ class Validations(schema: Schema, levelConfig: Message => Validations.Level) {
   protected[this] val dmValidations = Seq(
     new SelectDistinctNonStaticColumns(schema),
     new WhereNonPrimaryNoIndex(schema)
+  )
+
+  protected[this] val ddValidations = Seq(
+    new AlterColumnIncompatibleTypes(schema)
   )
 
   protected[this] val emptyResponse: Result[Unit] = V.success(())

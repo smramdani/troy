@@ -82,6 +82,10 @@ class AlterTableSpec extends WordSpec with Matchers {
           .get(parseQuery("SELECT post_title from test.posts;")).get
         row.asInstanceOf[SchemaEngine.Columns].types shouldBe Seq(DataType.Blob)
       }
+
+      "refuse incompatible types" in {
+        alter("ALTER TABLE test.posts ALTER author_name TYPE date;").getError shouldBe Messages.IncompatibleAlterType("author_name", DataType.Text, DataType.Date)
+      }
     }
 
     "adding options" should {

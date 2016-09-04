@@ -188,7 +188,8 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
 
   private val noVariables: Result[Seq[DataType]] = V.success(Seq.empty)
 
-  override def +(stmt: DataDefinition) = stmt match {
+  override def +(stmt: DataDefinition) =
+    validations.validate(stmt).map(_ => stmt) flatMap {
       case s: CreateKeyspace => schema.apply(s).map(s => copy(s))
       case s: CreateTable    => schema.apply(enrichWithContext(s)).map(s => copy(s))
       case s: CreateIndex    => schema.apply(enrichWithContext(s)).map(s => copy(s))

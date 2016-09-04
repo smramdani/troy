@@ -20,6 +20,7 @@ object Messages {
   case class ColumnAlreadyExists(t: TableName, c: Identifier) extends Message(s"Invalid column name $c because it conflicts with an existing column in table $t")
 
   case class CannotDropPrimaryKeyPart(c: Identifier) extends Message(s"Cannot drop PRIMARY KEY part $c")
+  case class IncompatibleAlterType(c: Identifier, ot: DataType, nt: DataType) extends Message(s"Cannot change $c from type $ot to type $nt: types are incompatible.")
 
   case class PrimaryKeyNotDefined(t: TableName) extends Message(s"CREATE TABLE $t statement has no Primary key defined")
 

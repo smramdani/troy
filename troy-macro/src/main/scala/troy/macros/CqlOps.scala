@@ -7,26 +7,37 @@ import scala.io.Source
 
 object CqlOps {
   import V.Implicits._
-  val loadOrParseSchema = Memoize(parseSchemaFromFileName)
+  val loadOrParseSchema = Memoize(parseSchemaFromPath)
 
-  private def parseSchemaFromFileName(path: String): Result[SchemaEngine] =
+  private def parseSchemaFromPath(path: String): Result[SchemaEngine] =
     Option(this.getClass.getResourceAsStream(path))
       .toV(Messages.SchemaNotFound(path))
-      .flatMap(parseSchemaFromInputStream)
+      .map(scala.io.Source.fromInputStream)
+      .map(_.getLines().toSeq)
+      .flatMap { r =>
+        r.foldLeft(Result(SchemaEngine.empty)) {
+          case (previous, file) => previous.flatMap(parseSchemaFromFileName(path + file, _))
+        }
+      }
 
-  private def parseSchemaFromInputStream(schemaFile: InputStream): Result[SchemaEngine] =
-    parseSchemaFromSource(scala.io.Source.fromInputStream(schemaFile))
+  private def parseSchemaFromFileName(path: String, previous: SchemaEngine): Result[SchemaEngine] =
+    Option(this.getClass.getResourceAsStream(path))
+      .toV(Messages.SchemaNotFound(path))
+      .flatMap(parseSchemaFromInputStream(_, previous))
 
-  private def parseSchemaFromSource(schema: Source) = {
+  private def parseSchemaFromInputStream(schemaFile: InputStream, previous: SchemaEngine): Result[SchemaEngine] =
+    parseSchemaFromSource(scala.io.Source.fromInputStream(schemaFile), previous)
+
+  private def parseSchemaFromSource(schema: Source, previous: SchemaEngine) = {
     val lines = schema.getLines()
     val str = lines.mkString("\n")
-    parseSchemaFromString(str)
+    parseSchemaFromString(str, previous)
   }
 
-  private def parseSchemaFromString(schema: String): Result[SchemaEngine] =
+  private def parseSchemaFromString(schema: String, previous: SchemaEngine): Result[SchemaEngine] =
     CqlParser.parseSchema(schema) match {
       case CqlParser.Success(result, _) =>
-        SchemaEngine(result)
+        SchemaEngine(result, previous)
       case CqlParser.Failure(msg, next) =>
         V.error(Messages.SchemaParseFailure(msg, next.pos.line, next.pos.column))
     }

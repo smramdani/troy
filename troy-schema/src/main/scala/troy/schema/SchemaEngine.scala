@@ -238,11 +238,11 @@ object SchemaEngine {
 
   type VariableTypes = Seq[DataType]
 
-  private val empty: SchemaEngine =
+  val empty: SchemaEngine =
     SchemaEngineImpl(Schema(Map.empty), None)
 
-  def apply(statements: Seq[DataDefinition]): Result[SchemaEngine] =
-    statements.foldLeft[Result[SchemaEngine]](V.success(empty)) {
+  def apply(statements: Seq[DataDefinition], previous: SchemaEngine = empty): Result[SchemaEngine] =
+    statements.foldLeft[Result[SchemaEngine]](V.success(previous)) {
       case (schema, statement) =>
         schema.flatMap(_ + statement)
     }

@@ -23,7 +23,7 @@ trait CassandraSpec extends FlatSpec with BeforeAndAfterAll with BeforeAndAfterE
 
   def testDataFixtures: String = ""
   private lazy val fixtures = StringCQLDataSet(testDataFixtures, false, false, "test")
-  private lazy val schema = new ClassPathCQLDataSet("schema.cql")
+  private lazy val schema = Seq(new ClassPathCQLDataSet("schema/01.cql"), new ClassPathCQLDataSet("schema/02.cql"))
 
   override protected def beforeAll(): Unit = {
     EmbeddedCassandraServerHelper.startEmbeddedCassandra(1.minute.toMillis)
@@ -39,7 +39,7 @@ trait CassandraSpec extends FlatSpec with BeforeAndAfterAll with BeforeAndAfterE
 
   def loadClean() = {
     EmbeddedCassandraServerHelper.cleanEmbeddedCassandra()
-    loadData(schema, fixtures)
+    loadData((schema :+ fixtures): _*)
   }
 
   def loadData(datasets: CQLDataSet*) = {

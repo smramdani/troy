@@ -34,7 +34,7 @@ package object macros {
 
     val (qParts, qParams) = findCqlQuery(c)(expr)
     val rawQuery = qParts.map{case q"${p: String}" => p}.mkString("?")
-    val schema = getOrAbort(loadOrParseSchema("/schema.cql"))
+    val schema = getOrAbort(loadOrParseSchema("/schema/"))
     val query = getOrAbort(parseQuery(rawQuery))
     val (rowType, variableDataTypes) = getOrAbort(schema(query))
 

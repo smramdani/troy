@@ -25,6 +25,22 @@ class DeleteStatementParserTest extends FlatSpec with Matchers {
 
   }
 
+  it should "parse simple delete statement with UUID value" in {
+    val statement = parseQuery("DELETE FROM Users WHERE userid = 01234567-0123-0123-0123-0123456789ab;")
+      .asInstanceOf[DeleteStatement]
+    statement.simpleSelection.isEmpty shouldBe true
+    statement.from.table shouldBe "Users"
+    statement.using.isEmpty shouldBe true
+
+    val relations = statement.where.relations
+    relations.size shouldBe 1
+    val simpleRelation = relations(0).asInstanceOf[Simple]
+    simpleRelation.columnName shouldBe "userid"
+    simpleRelation.operator shouldBe Operator.Equals
+    simpleRelation.term shouldBe Constant("01234567-0123-0123-0123-0123456789ab")
+
+  }
+
   it should "parse delete specific column statement" in {
     val statement = parseQuery("DELETE phone FROM Users WHERE userid IN (123, 222);").asInstanceOf[DeleteStatement]
     statement.simpleSelection.nonEmpty shouldBe true

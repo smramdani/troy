@@ -87,7 +87,7 @@ object CqlParser extends JavaTokenParsers
    */
   def constant: Parser[Constant] = {
     import Constants._
-    (string | number | uuid | boolean) ^^ Constant // | hex // TODO
+    (string | uuid | number | boolean) ^^ Constant // | hex // TODO
   }
   def identifier: Parser[Identifier] = "[a-zA-Z0-9_]+".r.filter(k => !Keywords.contains(k.toUpperCase))
 

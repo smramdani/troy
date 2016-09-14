@@ -237,6 +237,35 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations(0).asInstanceOf[Relation.Simple].term.asInstanceOf[Constant].raw shouldBe "199"
   }
 
+  it should "parse select statements with simple where clause with UUID term" in {
+    val statement = parseQuery(
+      "SELECT JSON name, occupation FROM users WHERE userid = 01234567-0123-0123-0123-0123456789ab;"
+    ).asInstanceOf[SelectStatement]
+
+    statement.from.table shouldBe "users"
+    statement.mod.get shouldBe Select.Json
+    statement.orderBy.isEmpty shouldBe true
+    statement.perPartitionLimit.isEmpty shouldBe true
+    statement.limit.isEmpty shouldBe true
+    statement.allowFiltering shouldBe false
+
+    val selection = statement.selection.asInstanceOf[Select.SelectClause]
+    selection.items.size shouldBe 2
+
+    selection.items(0).selector shouldBe Select.ColumnName("name")
+    selection.items(0).as.isEmpty shouldBe true
+
+    selection.items(1).selector shouldBe Select.ColumnName("occupation")
+    selection.items(1).as.isEmpty shouldBe true
+
+    statement.where.isDefined shouldBe true
+    val relations = statement.where.get.relations
+    relations.size shouldBe 1
+    relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "userid"
+    relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
+    relations(0).asInstanceOf[Relation.Simple].term shouldBe Constant("01234567-0123-0123-0123-0123456789ab")
+  }
+
   it should "parse select statements with where IN clause" in {
     val statement = parseQuery("SELECT name, occupation FROM users WHERE userid IN (199, 200, 207);").asInstanceOf[SelectStatement]
 

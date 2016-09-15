@@ -321,7 +321,7 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations.size shouldBe 1
     relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "blog_title"
     relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
-    relations(0).asInstanceOf[Relation.Simple].term shouldBe Constant("John''s Blog")
+    relations(0).asInstanceOf[Relation.Simple].term shouldBe Constant("John's Blog")
   }
 
   it should "parse select statements with where IN clause" in {

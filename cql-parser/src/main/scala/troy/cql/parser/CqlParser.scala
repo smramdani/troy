@@ -102,7 +102,7 @@ object CqlParser extends JavaTokenParsers
 
   object Constants {
 
-    def string = "'".r ~> """[^']*""".r ~ ("'".r ~> """'[^']*""".r).? <~ "'" ^^ { s => s._1 + s._2.getOrElse("") }
+    def string = "'".r ~> """([^']|'')*""".r <~ "'" ^^ { _.replace("''", "'") }
 
     def integer = wholeNumber
 

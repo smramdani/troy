@@ -295,6 +295,64 @@ class SelectStatementParserTest extends FlatSpec with Matchers {
     relations(0).asInstanceOf[Relation.Simple].term shouldBe Constant("50.4")
   }
 
+  it should "parse select statements with simple where clause with escaped quote" in {
+    val statement = parseQuery(
+      "SELECT entry_title, content FROM posts WHERE blog_title='John''s Blog';"
+    ).asInstanceOf[SelectStatement]
+
+    statement.from.table shouldBe "posts"
+    statement.mod.isDefined shouldBe false
+    statement.orderBy.isEmpty shouldBe true
+    statement.perPartitionLimit.isEmpty shouldBe true
+    statement.limit.isEmpty shouldBe true
+    statement.allowFiltering shouldBe false
+
+    val selection = statement.selection.asInstanceOf[Select.SelectClause]
+    selection.items.size shouldBe 2
+
+    selection.items(0).selector shouldBe Select.ColumnName("entry_title")
+    selection.items(0).as.isEmpty shouldBe true
+
+    selection.items(1).selector shouldBe Select.ColumnName("content")
+    selection.items(1).as.isEmpty shouldBe true
+
+    statement.where.isDefined shouldBe true
+    val relations = statement.where.get.relations
+    relations.size shouldBe 1
+    relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "blog_title"
+    relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
+    relations(0).asInstanceOf[Relation.Simple].term shouldBe Constant("John's Blog")
+  }
+
+  it should "parse select statements with simple where clause with multiple escaped quote" in {
+    val statement = parseQuery(
+      "SELECT entry_title, content FROM posts WHERE blog_title='This isn''t John''s Blog';"
+    ).asInstanceOf[SelectStatement]
+
+    statement.from.table shouldBe "posts"
+    statement.mod.isDefined shouldBe false
+    statement.orderBy.isEmpty shouldBe true
+    statement.perPartitionLimit.isEmpty shouldBe true
+    statement.limit.isEmpty shouldBe true
+    statement.allowFiltering shouldBe false
+
+    val selection = statement.selection.asInstanceOf[Select.SelectClause]
+    selection.items.size shouldBe 2
+
+    selection.items(0).selector shouldBe Select.ColumnName("entry_title")
+    selection.items(0).as.isEmpty shouldBe true
+
+    selection.items(1).selector shouldBe Select.ColumnName("content")
+    selection.items(1).as.isEmpty shouldBe true
+
+    statement.where.isDefined shouldBe true
+    val relations = statement.where.get.relations
+    relations.size shouldBe 1
+    relations(0).asInstanceOf[Relation.Simple].columnName shouldBe "blog_title"
+    relations(0).asInstanceOf[Relation.Simple].operator shouldBe Operator.Equals
+    relations(0).asInstanceOf[Relation.Simple].term shouldBe Constant("This isn't John's Blog")
+  }
+
   it should "parse select statements with where IN clause" in {
     val statement = parseQuery("SELECT name, occupation FROM users WHERE userid IN (199, 200, 207);").asInstanceOf[SelectStatement]
 

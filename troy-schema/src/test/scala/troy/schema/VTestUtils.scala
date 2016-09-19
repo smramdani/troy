@@ -10,7 +10,7 @@ object VTestUtils extends FlatSpec with Matchers {
     }
     def getErrors: Seq[E] = v match {
       case V.Error(es, ws)  => es
-      case V.Success(v, ws) => throw new NoSuchElementException(s"V.Success($v, $ws).get")
+      case V.Success(v, ws) => throw new NoSuchElementException(s"V.Success($v, $ws).getErrors")
     }
     def getError: E = getErrors.head
   }

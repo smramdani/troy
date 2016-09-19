@@ -31,4 +31,7 @@ object Messages {
 
   // Validations
   case class SelectedDistinctNonStaticColumn(c: Identifier) extends Message(s"SELECT DISTINCT queries must only request partition key columns and/or static columns (not $c)")
+
+  // Versioned
+  case class QueryNotCrossCompatible(messages: Seq[(VersionedSchemaEngine.Version, Seq[Message], Seq[Message])]) extends Message(s"One or more error: $messages") // TODO
 }

@@ -2,6 +2,7 @@ package troy
 
 import com.datastax.driver.core._
 import troy.macros._
+import troy.schema.VersionedSchemaEngine
 
 import scala.annotation.compileTimeOnly
 import scala.concurrent.Future
@@ -13,7 +14,13 @@ package object dsl {
     def cql(args: Any*): MacroDSL.TroyCql = ???
   }
 
-  def withSchema[F](code: F): F = macro troyImpl[F]
+  trait WithSchema {
+    def minVersion(v: VersionedSchemaEngine.Version) = new WithSchema {
+      def maxVersion(v: VersionedSchemaEngine.Version) = withSchema
+    }
+    def apply[F](code: F): F = macro troyImpl[F]
+  }
+  object withSchema extends WithSchema
 
   implicit class MacroDsl_RichStatement(val statement: Statement) extends ParsingOps {
     type ParseAs[R] = Future[Seq[R]]

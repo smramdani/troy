@@ -33,5 +33,11 @@ object Messages {
   case class SelectedDistinctNonStaticColumn(c: Identifier) extends Message(s"SELECT DISTINCT queries must only request partition key columns and/or static columns (not $c)")
 
   // Versioned
-  case class QueryNotCrossCompatible(messages: Seq[(VersionedSchemaEngine.Version, Seq[Message], Seq[Message])]) extends Message(s"One or more error: $messages") // TODO
+  case class QueryNotCrossCompatible(messages: Seq[(VersionedSchemaEngine.Version, Seq[Message], Seq[Message])]) extends Message(
+    // TODO: Erros and Warns need to be seperated
+    s"Query is not cross compatible.\n" + messages.map {
+      case (v, es, ws) =>
+        s"Version $v:\n" + es.map(_.message).map("  " + _).mkString("\n")
+    }.mkString("\n")
+  )
 }

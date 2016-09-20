@@ -9,38 +9,23 @@ object CqlOps {
   import V.Implicits._
   val loadOrParseSchema = Memoize(parseSchemaFromPath)
 
-  private def parseSchemaFromPath(path: String): Result[SchemaEngine] =
+  private def parseSchemaFromPath(path: String): Result[VersionedSchemaEngine] =
     Option(this.getClass.getResourceAsStream(path))
       .toV(Messages.SchemaNotFound(path))
       .map(scala.io.Source.fromInputStream)
       .map(_.getLines().toSeq)
       .flatMap { r =>
-        r.foldLeft(Result(SchemaEngine.empty)) {
-          case (previous, file) => previous.flatMap(parseSchemaFromFileName(path + file, _))
-        }
+        V.merge(r.map { file =>
+          val source = scala.io.Source.fromInputStream(this.getClass.getResourceAsStream(path + file)).getLines().mkString("\n")
+          CqlParser.parseSchema(source) match {
+            case CqlParser.Success(result, _) =>
+              V.success(result)
+            case CqlParser.Failure(msg, next) =>
+              V.error(Messages.SchemaParseFailure(msg, next.pos.line, next.pos.column))
+          }
+        })
       }
-
-  private def parseSchemaFromFileName(path: String, previous: SchemaEngine): Result[SchemaEngine] =
-    Option(this.getClass.getResourceAsStream(path))
-      .toV(Messages.SchemaNotFound(path))
-      .flatMap(parseSchemaFromInputStream(_, previous))
-
-  private def parseSchemaFromInputStream(schemaFile: InputStream, previous: SchemaEngine): Result[SchemaEngine] =
-    parseSchemaFromSource(scala.io.Source.fromInputStream(schemaFile), previous)
-
-  private def parseSchemaFromSource(schema: Source, previous: SchemaEngine) = {
-    val lines = schema.getLines()
-    val str = lines.mkString("\n")
-    parseSchemaFromString(str, previous)
-  }
-
-  private def parseSchemaFromString(schema: String, previous: SchemaEngine): Result[SchemaEngine] =
-    CqlParser.parseSchema(schema) match {
-      case CqlParser.Success(result, _) =>
-        SchemaEngine(result, previous)
-      case CqlParser.Failure(msg, next) =>
-        V.error(Messages.SchemaParseFailure(msg, next.pos.line, next.pos.column))
-    }
+      .flatMap(VersionedSchemaEngine.apply)
 
   def parseQuery(queryString: String) =
     CqlParser.parseDML(queryString) match {

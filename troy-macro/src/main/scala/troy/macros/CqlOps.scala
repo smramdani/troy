@@ -2,6 +2,7 @@ package troy.macros
 
 import java.io.InputStream
 import troy.cql.ast.CqlParser
+import troy.schema.V.Success
 import troy.schema._
 import scala.io.Source
 
@@ -17,23 +18,27 @@ object CqlOps {
       .flatMap { r =>
         V.merge(r.map { file =>
           val source = scala.io.Source.fromInputStream(this.getClass.getResourceAsStream(path + file)).getLines().mkString("\n")
-          CqlParser.parseSchema(source) match {
-            case CqlParser.Success(result, _) =>
-              V.success(result)
-            case CqlParser.Failure(msg, next) =>
-              V.error(Messages.SchemaParseFailure(msg, next.pos.line, next.pos.column))
-          }
+          CqlParser
+            .parseSchema(source)
+            .toV(f => Messages.SchemaParseFailure(f.msg, f.next.pos.line, f.next.pos.column))
         })
       }
       .flatMap(VersionedSchemaEngine.apply)
 
   def parseQuery(queryString: String) =
-    CqlParser.parseDML(queryString) match {
-      case CqlParser.Success(result, _) =>
-        V.success(result)
-      case CqlParser.Failure(msg, next) =>
-        V.error(Messages.QueryParseFailure(msg, next.pos.line, next.pos.column))
-    }
+    CqlParser
+      .parseDML(queryString)
+      .toV(f => Messages.QueryParseFailure(f.msg, f.next.pos.line, f.next.pos.column))
+
+  implicit class VParseResultOps[T](val r: CqlParser.ParseResult[T]) extends AnyVal {
+    def toV(e: CqlParser.Failure => Message): Result[T] =
+      r match {
+        case CqlParser.Success(result, _) =>
+          V.success(result)
+        case f: CqlParser.Failure =>
+          V.error(e(f))
+      }
+  }
 }
 
 case class Memoize[T, R](f: T => R) extends (T => R) {

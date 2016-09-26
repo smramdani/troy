@@ -16,7 +16,7 @@
 
 package troy.macros
 
-import troy.schema.Messages.{SchemaNotFound, QueryParseFailure}
+import troy.schema.Messages.{ SchemaNotFound, QueryParseFailure }
 import troy.schema.VTestUtils._
 import org.scalatest.FreeSpec
 

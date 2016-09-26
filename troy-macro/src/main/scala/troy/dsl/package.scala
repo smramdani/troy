@@ -9,6 +9,7 @@ import scala.concurrent.Future
 
 package object dsl {
 
+  // $COVERAGE-OFF$
   implicit class RichStringContext(val context: StringContext) extends AnyVal {
     @compileTimeOnly("cql Strings can be used only inside troy.dsl.withSchema block")
     def cql(args: Any*): MacroDSL.TroyCql = ???
@@ -20,6 +21,7 @@ package object dsl {
     }
     def apply[F](code: F): F = macro troyImpl[F]
   }
+  // $COVERAGE-ON$
   object withSchema extends WithSchema
 
   implicit class MacroDsl_RichStatement(val statement: Statement) extends ParsingOps {

@@ -72,7 +72,9 @@ class AlterTableSpec extends WordSpec with Matchers {
       }
 
       "refuse removing non-existing column" in {
-        alter("ALTER TABLE test.posts DROP nonExisting;").getError shouldBe Messages.ColumnNotFound("nonExisting", tableName)
+        val e = alter("ALTER TABLE test.posts DROP nonExisting;").getError
+        e shouldBe Messages.ColumnNotFound("nonExisting", tableName)
+        e.message should include("test.posts")
       }
     }
 

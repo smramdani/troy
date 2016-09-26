@@ -29,6 +29,8 @@ package object macros {
     import c.universe._
     implicit val c_ = c
 
+    val queryConfig = readQueryConfig(c)()
+
     val q"(..$params) => $exprWithDsl" = code.tree
     val expr = removeMacroDslClasses(c)(exprWithDsl)
 
@@ -36,7 +38,13 @@ package object macros {
     val rawQuery = qParts.map{case q"${p: String}" => p}.mkString("?")
     val schema = getOrAbort(loadOrParseSchema("/schema/"))
     val query = getOrAbort(parseQuery(rawQuery))
-    val (rowType, variableDataTypes) = getOrAbort(schema(query))
+    val (rowType, variableDataTypes) = getOrAbort {
+      queryConfig match {
+        case QueryConfig(None, None) => schema(query)
+        case QueryConfig(Some(min), Some(max)) => schema(query, min, max)
+        case QueryConfig(Some(min), None) => schema(query, min)
+      }
+    }
 
     val imports = Seq(
       q"import _root_.troy.dsl.InternalDsl._",
@@ -111,6 +119,20 @@ package object macros {
         q"${removeMacroDslClasses(c)(param)}"
       case q"troy.driver.DSL.ExternalDSL_RichStatement($param)" =>
         q"${removeMacroDslClasses(c)(param)}"
+    }
+  }
+
+  case class QueryConfig(minVersion: Option[Int] = None, maxVersion: Option[Int] = None)
+
+  private def readQueryConfig(c: Context)(tree: c.universe.Tree = c.prefix.tree, qc: QueryConfig = QueryConfig()): QueryConfig = {
+    import c.universe._
+    tree match {
+      case q"$expr.minVersion(${v: Int})" =>
+        readQueryConfig(c)(expr, qc.copy(minVersion = Some(v)))
+      case q"$expr.maxVersion(${v: Int})" =>
+        readQueryConfig(c)(expr, qc.copy(maxVersion = Some(v)))
+      case q"$_.withSchema" =>
+        qc
     }
   }
 

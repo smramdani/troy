@@ -17,7 +17,7 @@
 package troy.schema
 
 import org.scalatest._
-import troy.cql.ast.{DataType, CqlParser}
+import troy.cql.ast.{ DataType, CqlParser }
 import troy.cql.parser.ParserTestUtils
 import troy.schema.Messages.QueryNotCrossCompatible
 

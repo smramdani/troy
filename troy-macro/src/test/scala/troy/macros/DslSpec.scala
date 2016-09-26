@@ -135,4 +135,18 @@ class DslSpec extends CassandraSpec {
   //    }
   //    val res: Seq[AuthorAndPost] = q()
   //  }
+
+  it should "support specifying minimum version" in {
+    val q = withSchema.minVersion(1) { () =>
+      cql"SELECT author_id FROM test.posts;".prepared.execute.oneOption
+    }
+    q(): Option[Row]
+  }
+
+  it should "support specifying minimum version and maximum version" in {
+    val q = withSchema.minVersion(1).maxVersion(2) { () =>
+      cql"SELECT author_id FROM test.posts;".prepared.execute.oneOption
+    }
+    q(): Option[Row]
+  }
 }

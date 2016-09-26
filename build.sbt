@@ -36,7 +36,7 @@ lazy val troy = project
     Library.scalaTest % Test,
     Library.cassandraUnit % Test
   ))
-  .dependsOn(troyDriver, troySchema)
+  .dependsOn(troyDriver, troySchema % "test->test;compile->compile")
   .settings(Defaults.coreDefaultSettings ++ Seq(
     unmanagedClasspath in Test ++= (unmanagedResources in Test).value,
     parallelExecution in Test := false

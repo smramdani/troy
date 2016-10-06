@@ -49,6 +49,8 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
       extractRowType(stmt)
     case stmt: DeleteStatement =>
       extractRowType(stmt)
+    case stmt: UpdateStatement =>
+      extractRowType(stmt)
     case _ =>
       V.Success(Columns(Seq.empty))
   }
@@ -79,12 +81,21 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
         Seq.empty
     ))
 
+  private def extractRowType(query: UpdateStatement): Result[RowType] =
+    V.Success(Columns(
+      if (query.ifCondition.isDefined)
+        Seq(DataType.Boolean)
+      else
+        Seq.empty
+    ))
+
   private def extractVariableTypes(statement: DataManipulation): Result[Seq[DataType]] = statement match {
     case SelectStatement(_, _, from, Some(where), _, _, _, _)     => extractVariableTypes(from, where)
     case SelectStatement(_, _, from, None, _, _, _, _)            => V.Success(Seq.empty)
     case InsertStatement(table, clause: Insert.NamesValues, _, _) => extractVariableTypes(table, clause)
     case InsertStatement(table, clause: Insert.JsonClause, _, _)  => V.Success(Seq.empty)
     case s: DeleteStatement                                       => extractVariableTypes(s)
+    case s: UpdateStatement                                       => extractVariableTypes(s)
     case _                                                        => ???
   }
 
@@ -98,6 +109,7 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
         table.getColumn(columnName).flatMap(_.operandType(op)).map(dt => Seq(dt))
       case WhereClause.Relation.Tupled(identifiers, _, _) => ???
       case WhereClause.Relation.Token(_, identifiers, _)  => ???
+      case _                                              => noVariables
     }).map(_.flatten)
 
   private def extractVariableTypes(table: TableName, insertClause: Insert.NamesValues): Result[Seq[DataType]] = {
@@ -117,10 +129,28 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
       )).map(_.flatten)
     }
 
-  private def extractVariablesFromSimpleSelections(table: Table, selections: Seq[SimpleSelection]): Result[Seq[DataType]] =
-    V.merge(selections.map(extractVariablesFromSimpleSelection(table, _))).map(_.flatten)
+  private def extractVariableTypes(s: UpdateStatement): Result[Seq[DataType]] =
+    schema.getTable(s.tableName).flatMap { table =>
+      V.merge(Seq(
+        extractVariablesFomSet(table, s.set),
+        extractVariablesFromUpdateParam(table, s.using),
+        extractVariableTypes(table, s.where),
+        extractVariablesFromIfCondition(table, s.ifCondition)
+      )).map(_.flatten)
+    }
 
-  private def extractVariablesFromSimpleSelection(table: Table, selection: SimpleSelection): Result[Seq[DataType]] =
+  private def extractVariablesFomSet(table: Table, set: Seq[Update.Assignment]): Result[Seq[DataType]] =
+    V.merge(set.map {
+      case Update.SimpleSelectionAssignment(selection: SimpleSelection, term: BindMarker) =>
+        extractVariablesFromSimpleSelection(table, selection).map(x => Seq(x))
+      case Update.TermAssignment(columnName1: Identifier, columnName2: Identifier, updateOperator: Update.UpdateOperator, term: BindMarker) => ???
+      case _ => noVariables
+    }).map(_.flatten)
+
+  private def extractVariablesFromSimpleSelections(table: Table, selections: Seq[SimpleSelection]): Result[Seq[DataType]] =
+    V.merge(selections.map(extractVariablesFromSimpleSelectionColumnNameOf(table, _))).map(_.flatten)
+
+  private def extractVariablesFromSimpleSelectionColumnNameOf(table: Table, selection: SimpleSelection): Result[Seq[DataType]] =
     selection match {
       case SimpleSelection.ColumnNameOf(identifier, _: BindMarker) =>
         table.getColumn(identifier).map(_.dataType).map {
@@ -129,15 +159,23 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
         }
       case _ => noVariables
     }
-  private def extractVariablesFromUpdateParamValue(value: UpdateParamValue): Success[Nothing, DataType] = {
-    value match {
-      case UpdateVariable(_: BindMarker) => V.success(DataType.Int)
-      case _                             => ???
+
+  private def extractVariablesFromSimpleSelection(table: Table, selection: SimpleSelection): Result[DataType] = {
+    selection match {
+      case SimpleSelection.ColumnName(identifier)                  => table.getColumn(identifier).map(_.dataType)
+      case SimpleSelection.ColumnNameOf(identifier, _: BindMarker) => extractVariablesFromSimpleSelectionColumnNameOf(table, selection).map(_.head)
+      case SimpleSelection.ColumnNameDot(identifier, _)            => table.getColumn(identifier).map(_.dataType)
     }
   }
 
+  private def extractVariablesFromUpdateParamValue(value: UpdateParamValue): Option[DataType] =
+    value match {
+      case UpdateVariable(_) => Some(DataType.Int)
+      case UpdateValue(_)    => None
+    }
+
   private def extractVariablesFromUpdateParam(table: Table, updateParam: Seq[UpdateParam]): Result[Seq[DataType]] =
-    V.merge(updateParam.map {
+    V.success(updateParam.flatMap {
       case Ttl(value: UpdateParamValue)       => extractVariablesFromUpdateParamValue(value)
       case Timestamp(value: UpdateParamValue) => extractVariablesFromUpdateParamValue(value)
     })
@@ -150,11 +188,7 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
     }
 
   private def getExpectedTermTypeInCondition(table: Table, selection: SimpleSelection, operator: Operator): Result[DataType] = {
-    val selectionDataType = selection match {
-      case SimpleSelection.ColumnName(identifier)                  => table.getColumn(identifier).map(_.dataType)
-      case SimpleSelection.ColumnNameOf(identifier, _: BindMarker) => extractVariablesFromSimpleSelection(table, selection).map(_.head)
-      case SimpleSelection.ColumnNameDot(identifier, _)            => table.getColumn(identifier).map(_.dataType)
-    }
+    val selectionDataType = extractVariablesFromSimpleSelection(table, selection)
 
     operator match {
       case Operator.In => selectionDataType.map(dt => DataType.Tuple(Seq(dt)))
@@ -174,7 +208,7 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
     condition match {
       case Condition(selection: SimpleSelection, operator: Operator, term: Term) => {
         V.merge(Seq(
-          extractVariablesFromSimpleSelection(table, selection),
+          extractVariablesFromSimpleSelectionColumnNameOf(table, selection),
           getExpectedTermTypeInCondition(table, selection, operator).flatMap(extractVariablesFromTerm(term, _))
         )).map(_.flatten)
       }

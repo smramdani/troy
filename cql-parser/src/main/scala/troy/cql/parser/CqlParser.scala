@@ -214,7 +214,7 @@ object CqlParser extends JavaTokenParsers
     def varchar = "varchar".i ^^^ DataType.Varchar
     def varint = "varint".i ^^^ DataType.Varint
     def native: Parser[DataType.Native] =
-      ascii | bigint | blob | boolean | counter | date | decimal | double | float | inet | int | smallint | text | time | timestamp | timeuuid | tinyint | uuid | varchar | varint
+      ascii | bigint | blob | boolean | counter | date | decimal | double | float | inet | int | smallint | text | timestamp | timeuuid | time | tinyint | uuid | varchar | varint
 
     def list = "list".i ~> '<' ~> native <~ '>' ^^ DataType.List
     def set = "set".i ~> '<' ~> native <~ '>' ^^ DataType.Set
@@ -295,4 +295,3 @@ object CqlParser extends JavaTokenParsers
     "WITH"
   )
 }
-

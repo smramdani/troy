@@ -93,4 +93,16 @@ class CreateTableParserTest extends FlatSpec with Matchers {
     pk("((author_id, author_name), post_id, post_title)") shouldBe Table.PrimaryKey(Seq("author_id", "author_name"), Seq("post_id", "post_title"))
     pk("(author_id, post_id, post_title)") shouldBe Table.PrimaryKey(Seq("author_id"), Seq("post_id", "post_title"))
   }
+
+  it should "accepts schemas with timeuuid fields" in {
+    val statement = parseSchemaAs[CreateTable](
+      """
+        CREATE TABLE test.posts (
+          author_id text,
+          post_id timeuuid,
+          PRIMARY KEY ((author_id), post_id)
+        );
+      """
+    )
+  }
 }

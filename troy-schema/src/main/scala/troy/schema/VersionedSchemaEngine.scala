@@ -23,7 +23,7 @@ object VersionedSchemaEngine {
   type Version = Int
 
   def apply(allStatements: Seq[Seq[DataDefinition]]): Result[VersionedSchemaEngine] = {
-    val initial: Result[VersionedSchemaEngine] = SchemaEngine(allStatements.head).map(schema => VersionedSchemaEngineImpl(Map(1 -> schema)))
+    val initial: Result[VersionedSchemaEngine] = SchemaEngine(allStatements.head).map(wrap)
     allStatements.tail.foldLeft(initial) {
       case (versionedSchema, statements) =>
         statements.foldLeft(versionedSchema.map(_.incrementVersion)) {
@@ -32,6 +32,9 @@ object VersionedSchemaEngine {
         }
     }
   }
+
+  def wrap(schema: SchemaEngine) =
+    VersionedSchemaEngineImpl(Map(1 -> schema))
 }
 
 trait VersionedSchemaEngine extends SchemaEngine {
@@ -90,4 +93,3 @@ case class VersionedSchemaEngineImpl(schemas: Map[Version, SchemaEngine]) extend
   }
 
 }
-

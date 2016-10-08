@@ -18,10 +18,12 @@ package troy
 
 import scala.reflect.macros.blackbox.Context
 import troy.cql.ast.DataType
-import troy.schema.{SchemaEngine, V, Result}
+import troy.schema.{SchemaEngine, V, Result, ResourceFileOrFolderSchemaLoader}
 
 package object macros {
   import CqlOps._
+
+  private val loadedSchema = new ResourceFileOrFolderSchemaLoader("/schema.cql", "/schema/").load
 
   def log[T](value: T): T = { println(value); value }
 
@@ -36,7 +38,7 @@ package object macros {
 
     val (qParts, qParams) = findCqlQuery(c)(expr)
     val rawQuery = qParts.map{case q"${p: String}" => p}.mkString("?")
-    val schema = getOrAbort(loadOrParseSchema("/schema/"))
+    val schema = getOrAbort(loadedSchema)
     val query = getOrAbort(parseQuery(rawQuery))
     val (rowType, variableDataTypes) = getOrAbort {
       queryConfig match {

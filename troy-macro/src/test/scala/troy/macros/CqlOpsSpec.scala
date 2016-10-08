@@ -28,9 +28,4 @@ class CqlOpsSpec extends FreeSpec {
     }
   }
 
-  "CqlOps.parseSchemaFromPath should" - {
-    "fail with SchemaNotFound on wrong path" in {
-      CqlOps.loadOrParseSchema("/non_existent.cql").getError.asInstanceOf[SchemaNotFound]
-    }
-  }
 }

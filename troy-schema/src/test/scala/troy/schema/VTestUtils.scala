@@ -13,5 +13,6 @@ object VTestUtils extends FlatSpec with Matchers {
       case V.Success(v, ws) => throw new NoSuchElementException(s"V.Success($v, $ws).getErrors")
     }
     def getError: E = getErrors.head
+    def isSuccess: Boolean = v.isInstanceOf[V.Success[W, S]]
   }
 }

@@ -32,6 +32,12 @@ object Messages {
   // Validations
   case class SelectedDistinctNonStaticColumn(c: Identifier) extends Message(s"SELECT DISTINCT queries must only request partition key columns and/or static columns (not $c)")
 
+  //  TODO: Format Term
+  case class TermAssignmentFailure(c: Identifier, v: Term) extends Message(s"Invalid operation ($c = $c + $v) for non counter column $c")
+  case object TermAssignmentSyntaxError extends Message("Only expressions of the form X = X +<value> are supported.")
+  case object ListLiteralAssignmentSyntaxError extends Message("Only expressions of the form X = <value> + X are supported.")
+  case class ListLiteralAssignmentFailure(c: Identifier, nt: DataType) extends Message(s"Invalid list literal for $c of type $nt.")
+
   // Versioned
   case class QueryNotCrossCompatible(messages: Seq[(VersionedSchemaEngine.Version, Seq[Message], Seq[Message])]) extends Message(
     // TODO: Erros and Warns need to be seperated

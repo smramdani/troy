@@ -1,7 +1,8 @@
 package troy.cql.parser.dml
 
 import org.scalatest.{ FlatSpec, Matchers }
-import troy.cql.ast.{ Constant, UpdateStatement }
+import troy.cql.ast.CqlParser.Constants
+import troy.cql.ast.{ Constant, ListLiteral, UpdateStatement }
 import troy.cql.ast.dml._
 import troy.cql.ast.dml.Update._
 import troy.cql.ast.dml.WhereClause.Relation.Simple
@@ -67,5 +68,19 @@ class UpdateStatementParserTest extends FlatSpec with Matchers {
     simpleRelation2.operator shouldBe Operator.Equals
     simpleRelation2.term.asInstanceOf[Constant].raw shouldBe "click"
 
+  }
+
+  it should "parse update statement with list literal assignment" in {
+    val statement = parseQuery("UPDATE UserActions SET users = [2] + users WHERE user = B70DE1D0-9908-4AE3-BE34-5573E5B09F14 AND action = 'click';").asInstanceOf[UpdateStatement]
+    statement.tableName.table shouldBe "UserActions"
+    statement.using.isEmpty shouldBe true
+    val assignments = statement.set
+    assignments.size shouldBe 1
+
+    val assignment1 = assignments(0).asInstanceOf[ListLiteralAssignment]
+
+    assignment1.columnName1 shouldBe "users"
+    assignment1.columnName2 shouldBe "users"
+    assignment1.listLiteral.left.get.values(0).asInstanceOf[Constant].raw shouldBe "2"
   }
 }

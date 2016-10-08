@@ -1,7 +1,6 @@
 package troy.cql.ast.dml
 
-import troy.cql.ast.{ ListLiteral, Term }
-import troy.cql.ast.Identifier
+import troy.cql.ast.{ BindMarker, Identifier, ListLiteral, Term }
 
 object Update {
   sealed trait UpdateOperator
@@ -13,5 +12,5 @@ object Update {
   sealed trait Assignment
   final case class SimpleSelectionAssignment(selection: SimpleSelection, term: Term) extends Assignment
   final case class TermAssignment(columnName1: Identifier, columnName2: Identifier, updateOperator: UpdateOperator, term: Term) extends Assignment
-  final case class ListLiteralAssignment(columnName1: Identifier, listLiteral: ListLiteral, columnName2: Identifier) extends Assignment
+  final case class ListLiteralAssignment(columnName1: Identifier, listLiteral: Either[ListLiteral, BindMarker], columnName2: Identifier) extends Assignment
 }

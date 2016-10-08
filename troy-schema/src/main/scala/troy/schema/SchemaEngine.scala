@@ -17,6 +17,7 @@
 package troy.schema
 
 import troy.cql.ast._
+import troy.cql.ast.dml.Update.UpdateOperator
 import troy.cql.ast.dml._
 import troy.schema.V.Success
 import troy.schema.validation.Validations
@@ -141,11 +142,44 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
 
   private def extractVariablesFomSet(table: Table, set: Seq[Update.Assignment]): Result[Seq[DataType]] =
     V.merge(set.map {
-      case Update.SimpleSelectionAssignment(selection: SimpleSelection, term: BindMarker) =>
+      case Update.SimpleSelectionAssignment(selection, term: BindMarker) => //TODO: use extractVariablesFromTerm
         extractVariablesFromSimpleSelection(table, selection).map(x => Seq(x))
-      case Update.TermAssignment(columnName1: Identifier, columnName2: Identifier, updateOperator: Update.UpdateOperator, term: BindMarker) => ???
+      case Update.TermAssignment(columnName1, columnName2, updateOperator, term) =>
+        if (columnName1 == columnName2)
+          extractVariablesFromTermAssigment(table, columnName2, updateOperator, term)
+        else
+          V.error(Messages.TermAssignmentSyntaxError)
+      case Update.ListLiteralAssignment(columnName1, literalOrBindMarker, columnName2) =>
+        if (columnName1 == columnName2)
+          extractVariablesFromEitherListLiteralOrBindMarker(table, columnName1, literalOrBindMarker)
+        else
+          V.error(Messages.ListLiteralAssignmentSyntaxError)
       case _ => noVariables
     }).map(_.flatten)
+
+  private def extractVariablesFromEitherListLiteralOrBindMarker(table: Table, columnName: Identifier, literalOrBindMarker: Either[ListLiteral, BindMarker]): Result[Seq[DataType]] = {
+    literalOrBindMarker match {
+      case Left(listLiteral) => extractVariablesFromListLiteralAssignment(table, columnName, listLiteral)
+      case Right(bindMarker) => table.getColumn(columnName).map(_.dataType).flatMap {
+        case DataType.List(t) => V.success(Seq(DataType.List(t)))
+        case other            => V.error(Messages.ListLiteralAssignmentFailure(columnName, other))
+      }
+    }
+  }
+
+  private def extractVariablesFromTermAssigment(table: Table, columnName: Identifier, updateOperator: Update.UpdateOperator, term: Term): Result[Seq[DataType]] =
+    table.getColumn(columnName).map(_.dataType).flatMap {
+      case DataType.List(t)   => extractVariablesFromTerm(term, DataType.List(t))
+      case DataType.Map(k, t) => extractVariablesFromTerm(term, DataType.Map(k, t))
+      case DataType.Counter   => extractVariablesFromTerm(term, DataType.Int)
+      case other              => V.error(Messages.TermAssignmentFailure(columnName, term))
+    }
+
+  private def extractVariablesFromListLiteralAssignment(table: Table, columnName: Identifier, term: Term): Result[Seq[DataType]] =
+    table.getColumn(columnName).map(_.dataType).flatMap {
+      case DataType.List(t) => extractVariablesFromTerm(term, DataType.List(t))
+      case other            => V.error(Messages.ListLiteralAssignmentFailure(columnName, other))
+    }
 
   private def extractVariablesFromSimpleSelections(table: Table, selections: Seq[SimpleSelection]): Result[Seq[DataType]] =
     V.merge(selections.map(extractVariablesFromSimpleSelectionColumnNameOf(table, _))).map(_.flatten)

@@ -19,6 +19,7 @@ package troy.schema
 import org.scalatest._
 import troy.cql.ast._
 import troy.cql.ast.ddl.{ Keyspace => CqlKeyspace, Table => CqlTable }
+import troy.schema.Messages.{ TermAssignmentFailure, TermAssignmentSyntaxError }
 
 class UpdateSpec extends FlatSpec with Matchers {
   import VTestUtils._
@@ -89,13 +90,63 @@ class UpdateSpec extends FlatSpec with Matchers {
     variableTypes(0) shouldBe DataType.Int
   }
 
-  it should "update statement with variables in set clause" in {
+  it should "update statement with variables in simple set clause" in {
     val statement = parse("UPDATE test.posts USING TTL 400 SET post_title = ? WHERE author_id = ?; ")
     val (rowType, variableTypes) = schema(statement).get
     rowType.asInstanceOf[SchemaEngine.Columns].types.isEmpty shouldBe true
 
     variableTypes.size shouldBe 2
     variableTypes(0) shouldBe DataType.Text
+    variableTypes(1) shouldBe DataType.Uuid
+  }
+
+  it should "update statement validate term assignment syntax" in {
+    val statement = parse("UPDATE test.posts SET comments = post_title + ?  WHERE author_id = ?; ")
+    schema(statement).getError shouldBe TermAssignmentSyntaxError
+  }
+
+  it should "update statement validate term assignment" in {
+    val statement = parse("UPDATE test.posts SET post_title = post_title + ?  WHERE author_id = ?; ")
+    schema(statement).getError shouldBe TermAssignmentFailure("post_title", BindMarker.Anonymous)
+  }
+
+  it should "update statement with variables in term set clause with add" in {
+    val statement = parse("UPDATE test.posts SET comments = comments + ?  WHERE author_id = ?; ")
+    val (rowType, variableTypes) = schema(statement).get
+    rowType.asInstanceOf[SchemaEngine.Columns].types.isEmpty shouldBe true
+
+    variableTypes.size shouldBe 2
+    variableTypes(0) shouldBe DataType.Map(DataType.Int, DataType.Text)
+    variableTypes(1) shouldBe DataType.Uuid
+  }
+
+  it should "update statement with variables in term set clause with subtract" in {
+    val statement = parse("UPDATE test.posts SET comments = comments - ?  WHERE author_id = ?; ")
+    val (rowType, variableTypes) = schema(statement).get
+    rowType.asInstanceOf[SchemaEngine.Columns].types.isEmpty shouldBe true
+
+    variableTypes.size shouldBe 2
+    variableTypes(0) shouldBe DataType.Map(DataType.Int, DataType.Text)
+    variableTypes(1) shouldBe DataType.Uuid
+  }
+
+  it should "update statement with subvariables in term set clause with add" ignore {
+    val statement = parse("UPDATE test.posts SET comments = comments + {1: 'hello', 2: ? } WHERE author_id = ?; ")
+    val (rowType, variableTypes) = schema(statement).get
+    rowType.asInstanceOf[SchemaEngine.Columns].types.isEmpty shouldBe true
+
+    variableTypes.size shouldBe 2
+    variableTypes(0) shouldBe DataType.Text
+    variableTypes(1) shouldBe DataType.Uuid
+  }
+
+  it should "update statement with variables in listliteral set clause with add" in {
+    val statement = parse("UPDATE test.post_details SET comment_userIds = ? + comment_userIds WHERE author_id = ?; ")
+    val (rowType, variableTypes) = schema(statement).get
+    rowType.asInstanceOf[SchemaEngine.Columns].types.isEmpty shouldBe true
+
+    variableTypes.size shouldBe 2
+    variableTypes(0) shouldBe DataType.List(DataType.Uuid)
     variableTypes(1) shouldBe DataType.Uuid
   }
 

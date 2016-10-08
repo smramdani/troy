@@ -20,13 +20,12 @@ trait UpdateStatementParser {
       def termAssignment =
         (identifier <~ "=".i) ~ identifier ~ updateOperator ~ term ^^^^ TermAssignment
 
-      def listLiteralAssignment = {
-        val column1 = identifier <~ "=".i
-        val column2 = "+".i ~> identifier
-        column1 ~ listLiteral ~ column2 ^^^^ ListLiteralAssignment
-      }
+      def listLiteralAsLeft = listLiteral.map(Left.apply)
+      def bindMarkerAsRight = bindMarker.map(Right.apply)
+      def listLiteralAssignment =
+        (identifier <~ "=".i) ~ (listLiteralAsLeft | bindMarkerAsRight) ~ ("+".i ~> identifier) ^^^^ ListLiteralAssignment
 
-      simpleSelectionAssignment | termAssignment | listLiteralAssignment
+      termAssignment | listLiteralAssignment | simpleSelectionAssignment
     }
 
     def set = "SET".i ~> rep1sep(assignment, ",")

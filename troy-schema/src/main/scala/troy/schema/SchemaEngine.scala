@@ -133,8 +133,8 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
   private def extractVariableTypes(s: UpdateStatement): Result[Seq[DataType]] =
     schema.getTable(s.tableName).flatMap { table =>
       V.merge(Seq(
-        extractVariablesFomSet(table, s.set),
         extractVariablesFromUpdateParam(table, s.using),
+        extractVariablesFomSet(table, s.set),
         extractVariableTypes(table, s.where),
         extractVariablesFromIfCondition(table, s.ifCondition)
       )).map(_.flatten)
@@ -159,6 +159,7 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
 
   private def extractVariablesFromEitherListLiteralOrBindMarker(table: Table, columnName: Identifier, literalOrBindMarker: Either[ListLiteral, BindMarker]): Result[Seq[DataType]] = {
     literalOrBindMarker match {
+      // TODO: validate that column is actually a list
       case Left(listLiteral) => extractVariablesFromListLiteralAssignment(table, columnName, listLiteral)
       case Right(bindMarker) => table.getColumn(columnName).map(_.dataType).flatMap {
         case DataType.List(t) => V.success(Seq(DataType.List(t)))
@@ -171,6 +172,7 @@ case class SchemaEngineImpl(schema: Schema, context: Option[KeyspaceName]) exten
     table.getColumn(columnName).map(_.dataType).flatMap {
       case DataType.List(t)   => extractVariablesFromTerm(term, DataType.List(t))
       case DataType.Map(k, t) => extractVariablesFromTerm(term, DataType.Map(k, t))
+      case DataType.Set(t)    => extractVariablesFromTerm(term, DataType.Set(t))
       case DataType.Counter   => extractVariablesFromTerm(term, DataType.Int)
       case other              => V.error(Messages.TermAssignmentFailure(columnName, term))
     }

@@ -24,6 +24,12 @@ object Messages {
 
   case class PrimaryKeyNotDefined(t: TableName) extends Message(s"CREATE TABLE $t statement has no Primary key defined")
 
+  //TODO: Format Term
+  case class TermAssignmentFailure(c: Identifier, v: Term) extends Message(s"Invalid operation ($c = $c + $v) for non counter column $c")
+  case object TermAssignmentSyntaxError extends Message("Only expressions of the form X = X +<value> are supported.")
+  case object ListLiteralAssignmentSyntaxError extends Message("Only expressions of the form X = <value> + X are supported.")
+  case class ListLiteralAssignmentFailure(c: Identifier, nt: DataType) extends Message(s"Invalid list literal for $c of type $nt.")
+
   // Macro
   case class SchemaNotFound(path: String) extends Message(s"Can't find schema file $path")
   case class SchemaParseFailure(msg: String, line: Int, column: Int) extends Message(s"Failure during parsing the schema. Error ($msg) near line $line, column $column")
@@ -31,12 +37,6 @@ object Messages {
 
   // Validations
   case class SelectedDistinctNonStaticColumn(c: Identifier) extends Message(s"SELECT DISTINCT queries must only request partition key columns and/or static columns (not $c)")
-
-  //  TODO: Format Term
-  case class TermAssignmentFailure(c: Identifier, v: Term) extends Message(s"Invalid operation ($c = $c + $v) for non counter column $c")
-  case object TermAssignmentSyntaxError extends Message("Only expressions of the form X = X +<value> are supported.")
-  case object ListLiteralAssignmentSyntaxError extends Message("Only expressions of the form X = <value> + X are supported.")
-  case class ListLiteralAssignmentFailure(c: Identifier, nt: DataType) extends Message(s"Invalid list literal for $c of type $nt.")
 
   // Versioned
   case class QueryNotCrossCompatible(messages: Seq[(VersionedSchemaEngine.Version, Seq[Message], Seq[Message])]) extends Message(

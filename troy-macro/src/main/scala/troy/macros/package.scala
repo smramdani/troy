@@ -49,10 +49,8 @@ package object macros {
     }
 
     val imports = Seq(
-      q"import _root_.troy.dsl.InternalDsl._",
-      q"import _root_.troy.driver.CassandraDataType",
-      q"import _root_.troy.driver.codecs.HasTypeCodec._",
-      q"import _root_.troy.codecs.Primitives._"
+      q"import _root_.troy.driver.InternalDsl._",
+      q"import _root_.troy.driver.codecs.PrimitivesCodecs._"
     )
 
     val session = q"implicitly[com.datastax.driver.core.Session]"
@@ -199,7 +197,7 @@ package object macros {
 
   private def translateCollectionColumnType(c: Context)(typ: DataType): c.universe.Tree = {
     import c.universe._
-    val cdt = q"CassandraDataType"
+    val cdt = q"CDT"
     def translate(t: DataType) = translateNativeColumnType(c)(t)
     typ match {
       case DataType.List(t) => tq"$cdt.List[${translate(t)}]"
@@ -212,7 +210,7 @@ package object macros {
 
   private def translateNativeColumnType(c: Context)(typ: DataType): c.universe.Tree = {
     import c.universe._
-    val cdt = q"CassandraDataType"
+    val cdt = q"CDT"
     typ match {
       case DataType.Ascii => tq"$cdt.Ascii"
       case DataType.BigInt => tq"$cdt.BigInt"

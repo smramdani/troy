@@ -1,8 +1,7 @@
-package troy.meta
+package troy.driver
 
 import com.datastax.driver.core._
-import troy.driver._
-import troy.meta.codecs.TroyCodec
+import troy.driver.codecs.TroyCodec
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -11,9 +10,11 @@ object InternalDsl {
 
   import scala.collection.JavaConverters._
 
-  def column[S](i: Int)(implicit row: Row) = new {
+  val CDT = CassandraDataType
+
+  def column[S](i: Int)(implicit row: GettableByIndexData) = new {
     def as[C <: CassandraDataType](implicit getter: TroyCodec[S, C]): S =
-      getter.getColumn(row, i)
+      getter.get(row, i)
   }
 
   def param[S](value: S) = new {
@@ -22,7 +23,7 @@ object InternalDsl {
   }
 
   case class Param[S, C <: CassandraDataType](value: S, setter: TroyCodec[S, C]) {
-    def set(bound: BoundStatement, i: Int) = setter.setVariable(bound, i, value)
+    def set(bound: BoundStatement, i: Int) = setter.set(bound, i, value)
   }
 
   def bind(preparedStatement: com.datastax.driver.core.PreparedStatement, params: Param[_, _ <: CassandraDataType]*) =
@@ -33,8 +34,6 @@ object InternalDsl {
   implicit class InternalDSL_RichStatement(val statement: Statement) extends AnyVal {
     def parseAs[T](parser: Row => T)(implicit session: Session, executionContext: ExecutionContext): Future[Seq[T]] =
       statement.executeAsync.parseAs(parser)
-
-    //    def preparedAync = statement
   }
 
   implicit class InternalDSL_RichFutureOfResultSet(val resultSet: Future[ResultSet]) extends AnyVal {

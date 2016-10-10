@@ -38,7 +38,6 @@ class DslSpec extends CassandraSpec {
     """
 
   case class Post(id: UUID, author_name: String, title: String)
-  case class AuthorAndPost(authorId: UUID, postId: UUID, authorName: String, postRating: Int, postTitle: String)
 
   "The Macro" should "support no params" in {
     val q = withSchema { () =>

@@ -39,7 +39,7 @@ class Usage extends CassandraSpec {
     """
 
   case class Post(id: UUID, authorName: String, title: String)
-  case class AuthorAndPost(authorId: UUID, postId: UUID, authorName: String, postRating: Int, postTitle: String)
+  case class AuthorAndPost(authorId: UUID, postId: UUID, authorName: String, postRating: Option[Int], postTitle: Option[String])
 
   it should "support parsing one row sync" in {
     val query = withSchema { () =>
@@ -87,7 +87,7 @@ class Usage extends CassandraSpec {
         VALUES ( ${p.authorId}, ${p.postId}, ${p.authorName}, ${p.postRating}, ${p.postTitle}) ;
       """.prepared.executeAsync
     }
-    createPost(AuthorAndPost(UUID.randomUUID(), UUID.randomUUID(), "Author", 5, "Title")).futureValue
+    createPost(AuthorAndPost(UUID.randomUUID(), UUID.randomUUID(), "Author", Some(5), Some("Title"))).futureValue
   }
 
   it should "support INSERT with if not exists flag" in {
@@ -98,7 +98,7 @@ class Usage extends CassandraSpec {
         IF NOT EXISTS;
       """.prepared.execute.oneOption.as(identity[Boolean] _)
     }
-    createPost(AuthorAndPost(UUID.randomUUID(), UUID.randomUUID(), "Author", 5, "Title")).get shouldBe true
+    createPost(AuthorAndPost(UUID.randomUUID(), UUID.randomUUID(), "Author", Some(5), Some("Title"))).get shouldBe true
   }
 
   // TODO: https://github.com/tabdulradi/troy/issues/34

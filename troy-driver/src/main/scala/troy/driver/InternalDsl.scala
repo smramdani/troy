@@ -23,11 +23,14 @@ object InternalDsl {
   }
 
   case class Param[S, C <: CassandraDataType](value: S, setter: TroyCodec[S, C]) {
-    def set(bound: BoundStatement, i: Int) = setter.set(bound, i, value)
+    def set(bs: BoundStatement, i: Int) = setter.set(bs, i, value)
   }
 
-  def bind(preparedStatement: com.datastax.driver.core.PreparedStatement, params: Param[_, _ <: CassandraDataType]*) =
-    params.zipWithIndex.foldLeft(preparedStatement.bind()) {
+  def bind(ps: PreparedStatement, params: Param[_, _ <: CassandraDataType]*): BoundStatement =
+    bind(ps.bind(), params: _*)
+
+  private[this] def bind(bs: BoundStatement, params: Param[_, _ <: CassandraDataType]*) =
+    params.zipWithIndex.foldLeft(bs) {
       case (stmt, (param, i)) => param.set(stmt, i)
     }
 

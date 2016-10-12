@@ -6,28 +6,31 @@ import java.net.InetAddress
 import java.nio.ByteBuffer
 import java.util.{ UUID, Date }
 
-import com.datastax.driver.core.utils.UUIDs
-import com.datastax.driver.core.{ TypeCodec, Row, BoundStatement, LocalDate }
-
-import InternalDsl._
-import org.mockito.Matchers
-import org.scalatest.{ MustMatchers, FreeSpec }
-import org.scalatest.mock.MockitoSugar
-import troy.driver.codecs.PrimitivesCodecs._
-import org.mockito.Mockito._
-import org.mockito.Matchers._
 import scala.collection.JavaConverters._
 
-class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
-  implicit val gettable = mock[Row]
+import com.datastax.driver.core.utils.UUIDs
+import com.datastax.driver.core._
 
-  "InternalDSL Codecs when" - {
+import org.mockito.Matchers
+import org.mockito.Mockito._
+import org.mockito.Matchers._
+
+import org.scalatest.{ MustMatchers, FreeSpec }
+import org.scalatest.mock.MockitoSugar
+
+import troy.driver.codecs.PrimitivesCodecs._
+import InternalDsl._
+
+class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
+
+  "InternalDSL Codecs for type pair" - {
 
     "Int <--> int" - {
       type SType = Int
       val value: SType = 55
       type CType = CDT.Int
       "get from Row" in {
+        implicit val gettable = mock[Row]
         when(gettable.getInt(0)).thenReturn(value)
         column[SType](0).as[CType] mustBe value
       }
@@ -45,6 +48,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
       "BigInt" - {
         type CType = CDT.BigInt
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.getLong(0)).thenReturn(value)
           column[SType](0).as[CType] mustBe value
         }
@@ -57,6 +61,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
       "Counter" - {
         type CType = CDT.Counter
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.getLong(0)).thenReturn(value)
           column[SType](0).as[CType] mustBe value
         }
@@ -69,6 +74,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
       "Time" - {
         type CType = CDT.Time
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.getLong(0)).thenReturn(value)
           column[SType](0).as[CType] mustBe value
         }
@@ -86,6 +92,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
       type CType = CDT.SmallInt
 
       "get from Row" in {
+        implicit val gettable = mock[Row]
         when(gettable.getShort(0)).thenReturn(value)
         column[SType](0).as[CType] mustBe value
       }
@@ -101,6 +108,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
       type CType = CDT.TinyInt
 
       "get from Row" in {
+        implicit val gettable = mock[Row]
         when(gettable.getByte(0)).thenReturn(value)
         column[SType](0).as[CType] mustBe value
       }
@@ -116,6 +124,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
       type CType = CDT.Double
 
       "get from Row" in {
+        implicit val gettable = mock[Row]
         when(gettable.getDouble(0)).thenReturn(value)
         column[SType](0).as[CType] mustBe value
       }
@@ -130,6 +139,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
       val value: SType = 5.5F
       type CType = CDT.Float
       "get from Row" in {
+        implicit val gettable = mock[Row]
         when(gettable.getFloat(0)).thenReturn(value)
         column[SType](0).as[CType] mustBe value
       }
@@ -144,6 +154,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
       val value: SType = true
       type CType = CDT.Boolean
       "get from Row" in {
+        implicit val gettable = mock[Row]
         when(gettable.getBool(0)).thenReturn(value)
         column[SType](0).as[CType] mustBe value
       }
@@ -153,49 +164,48 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         verify(settable).setBool(0, value)
       }
     }
-    "String <--> ascii" - {
+    "String <-->" - {
       type SType = String
       val value: SType = ""
-      type CType = CDT.Ascii
       type TCodec = TypeCodec[SType]
-      "get from Row" in {
-        when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(value)
-        column[SType](0).as[CType] mustBe value
+      "ascii" - {
+        type CType = CDT.Ascii
+        "get from Row" in {
+          implicit val gettable = mock[Row]
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(value)
+          column[SType](0).as[CType] mustBe value
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(value).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(value), any[TCodec])
+        }
       }
-      "set into BoundStatement" in {
-        val settable = mock[BoundStatement]
-        param(value).as[CType].set(settable, 0)
-        verify(settable).set(Matchers.eq(0), Matchers.eq(value), any[TCodec])
+      "text" - {
+        type CType = CDT.Text
+        "get from Row" in {
+          implicit val gettable = mock[Row]
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(value)
+          column[SType](0).as[CType] mustBe value
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(value).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(value), any[TCodec])
+        }
       }
-    }
-    "String <--> text" - {
-      type SType = String
-      val value: SType = ""
-      type CType = CDT.Text
-      type TCodec = TypeCodec[SType]
-      "get from Row" in {
-        when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(value)
-        column[SType](0).as[CType] mustBe value
-      }
-      "set into BoundStatement" in {
-        val settable = mock[BoundStatement]
-        param(value).as[CType].set(settable, 0)
-        verify(settable).set(Matchers.eq(0), Matchers.eq(value), any[TCodec])
-      }
-    }
-    "String <--> varchar" - {
-      type SType = String
-      val value: SType = ""
-      type CType = CDT.VarChar
-      type TCodec = TypeCodec[SType]
-      "get from Row" in {
-        when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(value)
-        column[SType](0).as[CType] mustBe value
-      }
-      "set into BoundStatement" in {
-        val settable = mock[BoundStatement]
-        param(value).as[CType].set(settable, 0)
-        verify(settable).set(Matchers.eq(0), Matchers.eq(value), any[TCodec])
+      "varchar" - {
+        type CType = CDT.VarChar
+        "get from Row" in {
+          implicit val gettable = mock[Row]
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(value)
+          column[SType](0).as[CType] mustBe value
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(value).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(value), any[TCodec])
+        }
       }
     }
     "Date <--> timestamp" - {
@@ -204,6 +214,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
       type CType = CDT.Timestamp
       type TCodec = TypeCodec[SType]
       "get from Row" in {
+        implicit val gettable = mock[Row]
         when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(value)
         column[SType](0).as[CType] mustBe value
       }
@@ -219,6 +230,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
       type CType = CDT.Decimal
       type TCodec = TypeCodec[SType]
       "get from Row" in {
+        implicit val gettable = mock[Row]
         when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(value)
         column[SType](0).as[CType] mustBe value
       }
@@ -234,6 +246,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
       type CType = CDT.Inet
       type TCodec = TypeCodec[SType]
       "get from Row" in {
+        implicit val gettable = mock[Row]
         when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(value)
         column[SType](0).as[CType] mustBe value
       }
@@ -249,6 +262,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
       type CType = CDT.VarInt
       type TCodec = TypeCodec[SType]
       "get from Row" in {
+        implicit val gettable = mock[Row]
         when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(value)
         column[SType](0).as[CType] mustBe value
       }
@@ -264,6 +278,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
       type CType = CDT.Blob
       type TCodec = TypeCodec[SType]
       "get from Row" in {
+        implicit val gettable = mock[Row]
         when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(value)
         column[SType](0).as[CType] mustBe value
       }
@@ -273,34 +288,35 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         verify(settable).set(Matchers.eq(0), Matchers.eq(value), any[TCodec])
       }
     }
-    "UUID <--> timeuuid" - {
-      type SType = UUID
-      val value: SType = UUIDs.timeBased
-      type CType = CDT.TimeUuid
+    "UUID <-->" - {
+      type SType = Option[UUID]
+      val value: SType = Some(UUIDs.timeBased)
       type TCodec = TypeCodec[SType]
-      "get from Row" in {
-        when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(value)
-        column[SType](0).as[CType] mustBe value
+      "timeuuid" - {
+        type CType = CDT.TimeUuid
+        "get from Row" in {
+          implicit val gettable = mock[Row]
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(value)
+          column[SType](0).as[CType] mustBe value
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(value).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(value), any[TCodec])
+        }
       }
-      "set into BoundStatement" in {
-        val settable = mock[BoundStatement]
-        param(value).as[CType].set(settable, 0)
-        verify(settable).set(Matchers.eq(0), Matchers.eq(value), any[TCodec])
-      }
-    }
-    "UUID <--> uuid" - {
-      type SType = UUID
-      val value: SType = UUID.randomUUID()
-      type CType = CDT.Uuid
-      type TCodec = TypeCodec[SType]
-      "get from Row" in {
-        when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(value)
-        column[SType](0).as[CType] mustBe value
-      }
-      "set into BoundStatement" in {
-        val settable = mock[BoundStatement]
-        param(value).as[CType].set(settable, 0)
-        verify(settable).set(Matchers.eq(0), Matchers.eq(value), any[TCodec])
+      "uuid" - {
+        type CType = CDT.Uuid
+        "get from Row" in {
+          implicit val gettable = mock[Row]
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(value)
+          column[SType](0).as[CType] mustBe value
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(value).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(value), any[TCodec])
+        }
       }
     }
     "LocalDate <--> .date" - {
@@ -309,6 +325,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
       type CType = CDT.Date
       type TCodec = TypeCodec[SType]
       "get from Row" in {
+        implicit val gettable = mock[Row]
         when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(value)
         column[SType](0).as[CType] mustBe value
       }
@@ -316,6 +333,306 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         val settable = mock[BoundStatement]
         param(value).as[CType].set(settable, 0)
         verify(settable).set(Matchers.eq(0), Matchers.eq(value), any[TCodec])
+      }
+    }
+
+    "Option" - {
+      "[Int] <--> int" - {
+        type JType = Int
+        type SType = Option[JType]
+        val jValue: JType = 55
+        val sValue: SType = Some(jValue)
+        type CType = CDT.Int
+
+        "get from Row" in {
+          implicit val gettable = mock[Row]
+          when(gettable.isNull(0)).thenReturn(false)
+          when(gettable.getInt(0)).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).setInt(0, jValue)
+        }
+        "get from Row (nullable)" in {
+          implicit val gettable = mock[Row]
+          when(gettable.isNull(0)).thenReturn(true)
+          column[SType](0).as[CType] mustBe None
+        }
+        "set into BoundStatement (nullable)" in {
+          val settable = mock[BoundStatement]
+          param(None: SType).as[CType].set(settable, 0)
+          verify(settable).setToNull(0)
+        }
+      }
+      "[Long] <--> list" - {
+        type JType = Long
+        type SType = Option[JType]
+        val jValue: JType = 55555L
+        val sValue: SType = Some(jValue)
+
+        "<bigint>" - {
+          type CType = CDT.BigInt
+
+          "get from Row" in {
+            implicit val gettable = mock[Row]
+            when(gettable.getLong(0)).thenReturn(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+            verify(settable).setLong(0, jValue)
+          }
+          "get from Row (nullable)" in {
+            implicit val gettable = mock[Row]
+            when(gettable.isNull(0)).thenReturn(true)
+            column[SType](0).as[CType] mustBe None
+          }
+          "set into BoundStatement (nullable)" in {
+            val settable = mock[BoundStatement]
+            param(None: SType).as[CType].set(settable, 0)
+            verify(settable).setToNull(0)
+          }
+        }
+        "<counter>" - {
+          type CType = CDT.Counter
+
+          "get from Row" in {
+            implicit val gettable = mock[Row]
+            when(gettable.getLong(0)).thenReturn(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+            verify(settable).setLong(0, jValue)
+          }
+          "get from Row (nullable)" in {
+            implicit val gettable = mock[Row]
+            when(gettable.isNull(0)).thenReturn(true)
+            column[SType](0).as[CType] mustBe None
+          }
+          "set into BoundStatement (nullable)" in {
+            val settable = mock[BoundStatement]
+            param(None: SType).as[CType].set(settable, 0)
+            verify(settable).setToNull(0)
+          }
+        }
+        "<time>" - {
+          type CType = CDT.Time
+          "get from Row" in {
+            implicit val gettable = mock[Row]
+            when(gettable.getLong(0)).thenReturn(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+            verify(settable).setLong(0, jValue)
+          }
+          "get from Row (nullable)" in {
+            implicit val gettable = mock[Row]
+            when(gettable.isNull(0)).thenReturn(true)
+            column[SType](0).as[CType] mustBe None
+          }
+          "set into BoundStatement (nullable)" in {
+            val settable = mock[BoundStatement]
+            param(None: SType).as[CType].set(settable, 0)
+            verify(settable).setToNull(0)
+          }
+        }
+      }
+      "[Short] <--> smallint" - {
+        type JType = Short
+        type SType = Option[JType]
+        val jValue: JType = 5.toShort
+        val sValue: SType = Some(jValue)
+        type CType = CDT.SmallInt
+
+        "get from Row" in {
+          implicit val gettable = mock[Row]
+          when(gettable.getShort(0)).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).setShort(0, jValue)
+        }
+        "get from Row (nullable)" in {
+          implicit val gettable = mock[Row]
+          when(gettable.isNull(0)).thenReturn(true)
+          column[SType](0).as[CType] mustBe None
+        }
+        "set into BoundStatement (nullable)" in {
+          val settable = mock[BoundStatement]
+          param(None: SType).as[CType].set(settable, 0)
+          verify(settable).setToNull(0)
+        }
+      }
+      "[Byte] <--> tinyint" - {
+        type JType = Byte
+        type SType = Option[JType]
+        val jValue: JType = 5.toByte
+        val sValue: SType = Some(jValue)
+        type CType = CDT.TinyInt
+
+        "get from Row" in {
+          implicit val gettable = mock[Row]
+          when(gettable.getByte(0)).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).setByte(0, jValue)
+        }
+        "get from Row (nullable)" in {
+          implicit val gettable = mock[Row]
+          when(gettable.isNull(0)).thenReturn(true)
+          column[SType](0).as[CType] mustBe None
+        }
+        "set into BoundStatement (nullable)" in {
+          val settable = mock[BoundStatement]
+          param(None: SType).as[CType].set(settable, 0)
+          verify(settable).setToNull(0)
+        }
+      }
+      "[Double] <--> double" - {
+        type JType = Double
+        type SType = Option[JType]
+        val jValue: JType = 5.5D
+        val sValue: SType = Some(jValue)
+        type CType = CDT.Double
+
+        "get from Row" in {
+          implicit val gettable = mock[Row]
+          when(gettable.getDouble(0)).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).setDouble(0, jValue)
+        }
+        "get from Row (nullable)" in {
+          implicit val gettable = mock[Row]
+          when(gettable.isNull(0)).thenReturn(true)
+          column[SType](0).as[CType] mustBe None
+        }
+        "set into BoundStatement (nullable)" in {
+          val settable = mock[BoundStatement]
+          param(None: SType).as[CType].set(settable, 0)
+          verify(settable).setToNull(0)
+        }
+      }
+      "[Float] <--> float" - {
+        type JType = Float
+        type SType = Option[JType]
+        val jValue: JType = 5.5F
+        val sValue: SType = Some(jValue)
+        type CType = CDT.Float
+
+        "get from Row" in {
+          implicit val gettable = mock[Row]
+          when(gettable.getFloat(0)).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).setFloat(0, jValue)
+        }
+        "get from Row (nullable)" in {
+          implicit val gettable = mock[Row]
+          when(gettable.isNull(0)).thenReturn(true)
+          column[SType](0).as[CType] mustBe None
+        }
+        "set into BoundStatement (nullable)" in {
+          val settable = mock[BoundStatement]
+          param(None: SType).as[CType].set(settable, 0)
+          verify(settable).setToNull(0)
+        }
+      }
+      "[Boolean] <--> boolean" - {
+        type JType = Boolean
+        type SType = Option[JType]
+        val jValue: JType = true
+        val sValue: SType = Some(jValue)
+        type CType = CDT.Boolean
+
+        "get from Row" in {
+          implicit val gettable = mock[Row]
+          when(gettable.getBool(0)).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).setBool(0, jValue)
+        }
+        "get from Row (nullable)" in {
+          implicit val gettable = mock[Row]
+          when(gettable.isNull(0)).thenReturn(true)
+          column[SType](0).as[CType] mustBe None
+        }
+        "set into BoundStatement (nullable)" in {
+          val settable = mock[BoundStatement]
+          param(None: SType).as[CType].set(settable, 0)
+          verify(settable).setToNull(0)
+        }
+      }
+      "[String] <-->" - {
+        type JType = String
+        type SType = Option[JType]
+        val jValue: JType = ""
+        val sValue: SType = Some(jValue)
+        type TCodec = TypeCodec[SType]
+        "ascii" - {
+          type CType = CDT.Ascii
+          "get from Row" in {
+            implicit val gettable = FakeAbstractGettableByIndexData.ascii(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+          }
+          "get from Row (nullable)" in {
+            implicit val gettable = FakeAbstractGettableByIndexData.ascii(null)
+            column[SType](0).as[CType] mustBe None
+          }
+          "set into BoundStatement (nullable)" in {
+            val settable = mock[BoundStatement]
+            param(None: SType).as[CType].set(settable, 0)
+          }
+        }
+      }
+      "[Date] <--> timestamp" - {
+        type JType = Date
+        type SType = Option[JType]
+        val jValue: JType = new Date
+        val sValue: SType = Some(jValue)
+        type TCodec = TypeCodec[SType]
+        type CType = CDT.Timestamp
+        val settable = mock[BoundStatement]
+
+        "get from Row" in {
+          implicit val gettable = FakeAbstractGettableByIndexData.timestamp(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          param(sValue).as[CType].set(settable, 0)
+        }
+        "get from Row (nullable)" in {
+          implicit val gettable = FakeAbstractGettableByIndexData.timestamp(null)
+          column[SType](0).as[CType] mustBe None
+        }
+        "set into BoundStatement (nullable)" in {
+          param(None: SType).as[CType].set(settable, 0)
+        }
       }
     }
 
@@ -328,6 +645,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.List[CDT.Int]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -348,6 +666,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
           type CType = CDT.List[CDT.BigInt]
 
           "get from Row" in {
+            implicit val gettable = mock[Row]
             when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
             column[SType](0).as[CType] mustBe sValue
           }
@@ -361,6 +680,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
           type CType = CDT.List[CDT.Counter]
 
           "get from Row" in {
+            implicit val gettable = mock[Row]
             when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
             column[SType](0).as[CType] mustBe sValue
           }
@@ -373,6 +693,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         "<time>" - {
           type CType = CDT.List[CDT.Time]
           "get from Row" in {
+            implicit val gettable = mock[Row]
             when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
             column[SType](0).as[CType] mustBe sValue
           }
@@ -391,6 +712,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.List[CDT.SmallInt]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -408,6 +730,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.List[CDT.TinyInt]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -425,6 +748,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.List[CDT.Double]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -442,6 +766,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.List[CDT.Float]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -459,6 +784,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.List[CDT.Boolean]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -477,6 +803,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         "<ascii>" - {
           type CType = CDT.List[CDT.Ascii]
           "get from Row" in {
+            implicit val gettable = mock[Row]
             when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
             column[SType](0).as[CType] mustBe sValue
           }
@@ -489,6 +816,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         "<text>" - {
           type CType = CDT.List[CDT.Text]
           "get from Row" in {
+            implicit val gettable = mock[Row]
             when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
             column[SType](0).as[CType] mustBe sValue
           }
@@ -501,6 +829,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         "<varchar>" - {
           type CType = CDT.List[CDT.VarChar]
           "get from Row" in {
+            implicit val gettable = mock[Row]
             when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
             column[SType](0).as[CType] mustBe sValue
           }
@@ -519,6 +848,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.List[CDT.Timestamp]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -536,6 +866,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.List[CDT.Decimal]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -553,6 +884,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.List[CDT.Inet]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -570,6 +902,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.List[CDT.VarInt]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -587,6 +920,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.List[CDT.Blob]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -605,6 +939,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         "<timeuuid>" - {
           type CType = CDT.List[CDT.TimeUuid]
           "get from Row" in {
+            implicit val gettable = mock[Row]
             when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
             column[SType](0).as[CType] mustBe sValue
           }
@@ -617,6 +952,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         "<uuid>" - {
           type CType = CDT.List[CDT.Uuid]
           "get from Row" in {
+            implicit val gettable = mock[Row]
             when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
             column[SType](0).as[CType] mustBe sValue
           }
@@ -636,6 +972,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.List[CDT.Date]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -655,6 +992,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.Set[CDT.Int]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -673,6 +1011,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         "<bigint>" - {
           type CType = CDT.Set[CDT.BigInt]
           "get from Row" in {
+            implicit val gettable = mock[Row]
             when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
             column[SType](0).as[CType] mustBe sValue
           }
@@ -685,6 +1024,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         "<counter>" - {
           type CType = CDT.Set[CDT.Counter]
           "get from Row" in {
+            implicit val gettable = mock[Row]
             when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
             column[SType](0).as[CType] mustBe sValue
           }
@@ -697,6 +1037,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         "<time>" - {
           type CType = CDT.Set[CDT.Time]
           "get from Row" in {
+            implicit val gettable = mock[Row]
             when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
             column[SType](0).as[CType] mustBe sValue
           }
@@ -715,6 +1056,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.Set[CDT.SmallInt]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -732,6 +1074,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.Set[CDT.TinyInt]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -749,6 +1092,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.Set[CDT.Double]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -766,6 +1110,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.Set[CDT.Float]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -783,6 +1128,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.Set[CDT.Boolean]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -801,6 +1147,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         "<ascii>" - {
           type CType = CDT.Set[CDT.Ascii]
           "get from Row" in {
+            implicit val gettable = mock[Row]
             when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
             column[SType](0).as[CType] mustBe sValue
           }
@@ -813,6 +1160,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         "<text>" - {
           type CType = CDT.Set[CDT.Text]
           "get from Row" in {
+            implicit val gettable = mock[Row]
             when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
             column[SType](0).as[CType] mustBe sValue
           }
@@ -825,6 +1173,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         "<varchar>" - {
           type CType = CDT.Set[CDT.VarChar]
           "get from Row" in {
+            implicit val gettable = mock[Row]
             when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
             column[SType](0).as[CType] mustBe sValue
           }
@@ -843,6 +1192,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.Set[CDT.Timestamp]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -860,6 +1210,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.Set[CDT.Decimal]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -877,6 +1228,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.Set[CDT.Inet]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -894,6 +1246,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.Set[CDT.VarInt]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -911,6 +1264,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.Set[CDT.Blob]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -929,6 +1283,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         "<timeuuid>" - {
           type CType = CDT.Set[CDT.TimeUuid]
           "get from Row" in {
+            implicit val gettable = mock[Row]
             when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
             column[SType](0).as[CType] mustBe sValue
           }
@@ -941,6 +1296,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         "<uuid>" - {
           type CType = CDT.Set[CDT.Uuid]
           "get from Row" in {
+            implicit val gettable = mock[Row]
             when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
             column[SType](0).as[CType] mustBe sValue
           }
@@ -959,6 +1315,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.Set[CDT.Date]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -978,6 +1335,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.Map[CDT.Int, CDT.Int]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -996,6 +1354,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         "<bigint, bigint>" - {
           type CType = CDT.Map[CDT.BigInt, CDT.BigInt]
           "get from Row" in {
+            implicit val gettable = mock[Row]
             when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
             column[SType](0).as[CType] mustBe sValue
           }
@@ -1008,6 +1367,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         "<counter, counter>" - {
           type CType = CDT.Map[CDT.Counter, CDT.Counter]
           "get from Row" in {
+            implicit val gettable = mock[Row]
             when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
             column[SType](0).as[CType] mustBe sValue
           }
@@ -1020,6 +1380,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         "map<time, time>" - {
           type CType = CDT.Map[CDT.Time, CDT.Time]
           "get from Row" in {
+            implicit val gettable = mock[Row]
             when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
             column[SType](0).as[CType] mustBe sValue
           }
@@ -1038,6 +1399,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.Map[CDT.SmallInt, CDT.SmallInt]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -1055,6 +1417,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.Map[CDT.TinyInt, CDT.TinyInt]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -1072,6 +1435,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.Map[CDT.Double, CDT.Double]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -1089,6 +1453,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.Map[CDT.Float, CDT.Float]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -1106,6 +1471,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.Map[CDT.Boolean, CDT.Boolean]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -1124,6 +1490,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         "<ascii, ascii>" - {
           type CType = CDT.Map[CDT.Ascii, CDT.Ascii]
           "get from Row" in {
+            implicit val gettable = mock[Row]
             when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
             column[SType](0).as[CType] mustBe sValue
           }
@@ -1136,6 +1503,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         "map<text, text>" - {
           type CType = CDT.Map[CDT.Text, CDT.Text]
           "get from Row" in {
+            implicit val gettable = mock[Row]
             when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
             column[SType](0).as[CType] mustBe sValue
           }
@@ -1148,6 +1516,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         "[String, String] <--> map<varchar, varchar>" - {
           type CType = CDT.Map[CDT.VarChar, CDT.VarChar]
           "get from Row" in {
+            implicit val gettable = mock[Row]
             when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
             column[SType](0).as[CType] mustBe sValue
           }
@@ -1166,6 +1535,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type TCodec = TypeCodec[JType]
         type CType = CDT.Map[CDT.Timestamp, CDT.Timestamp]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -1183,6 +1553,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.Map[CDT.Decimal, CDT.Decimal]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -1200,6 +1571,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.Map[CDT.Inet, CDT.Inet]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -1217,6 +1589,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.Map[CDT.VarInt, CDT.VarInt]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -1234,6 +1607,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.Map[CDT.Blob, CDT.Blob]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -1252,6 +1626,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         "<timeuuid, timeuuid>" - {
           type CType = CDT.Map[CDT.TimeUuid, CDT.TimeUuid]
           "get from Row" in {
+            implicit val gettable = mock[Row]
             when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
             column[SType](0).as[CType] mustBe sValue
           }
@@ -1264,6 +1639,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         "<uuid, uuid>" - {
           type CType = CDT.Map[CDT.Uuid, CDT.Uuid]
           "get from Row" in {
+            implicit val gettable = mock[Row]
             when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
             column[SType](0).as[CType] mustBe sValue
           }
@@ -1282,6 +1658,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.Map[CDT.Date, CDT.Date]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -1299,6 +1676,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.Map[CDT.Int, CDT.Text]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }
@@ -1316,6 +1694,7 @@ class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
         type CType = CDT.Map[CDT.Text, CDT.Int]
         type TCodec = TypeCodec[JType]
         "get from Row" in {
+          implicit val gettable = mock[Row]
           when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
           column[SType](0).as[CType] mustBe sValue
         }

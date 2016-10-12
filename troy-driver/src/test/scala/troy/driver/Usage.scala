@@ -21,17 +21,16 @@ import java.util.UUID
 import com.datastax.driver.core._
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext.Implicits.global
+import DSL._
 
 /*
  * Playground to test the helpers without macros
  */
 object Usage extends App {
-  import DSL._
-
   val cluster = Cluster.builder().addContactPoint("127.0.0.1").build()
   implicit val session: Session = cluster.connect()
-  case class Post(id: UUID, author_name: String, title: String)
-  import scala.concurrent.ExecutionContext.Implicits.global
+  case class Post(id: UUID, authorName: String, title: String)
 
   val getByTitle = {
     import InternalDsl._

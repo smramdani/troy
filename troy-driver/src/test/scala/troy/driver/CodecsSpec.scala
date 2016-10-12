@@ -7,266 +7,1325 @@ import java.nio.ByteBuffer
 import java.util.{ UUID, Date }
 
 import com.datastax.driver.core.utils.UUIDs
-import com.datastax.driver.core.{ BoundStatement, LocalDate, GettableByIndexData }
+import com.datastax.driver.core.{ TypeCodec, Row, BoundStatement, LocalDate }
 
 import InternalDsl._
+import org.mockito.Matchers
+import org.scalatest.{ MustMatchers, FreeSpec }
+import org.scalatest.mock.MockitoSugar
 import troy.driver.codecs.PrimitivesCodecs._
-
-object CodecsSpec {
-  implicit def gettable: GettableByIndexData = ???
-  def settable: BoundStatement = ???
-
-  column[Int](0).as[CDT.Int]
-  param(55).as[CDT.Int].set(settable, 0)
-
-  column[Long](0).as[CDT.BigInt]
-  param(55555L).as[CDT.BigInt].set(settable, 0)
-
-  column[Long](0).as[CDT.Counter]
-  param(55555L).as[CDT.Counter].set(settable, 0)
-
-  column[Long](0).as[CDT.Time]
-  param(55555L).as[CDT.Time].set(settable, 0)
-
-  column[Short](0).as[CDT.SmallInt]
-  param(5.toShort).as[CDT.SmallInt].set(settable, 0)
-
-  column[Byte](0).as[CDT.TinyInt]
-  param(5.toByte).as[CDT.TinyInt].set(settable, 0)
-
-  column[Double](0).as[CDT.Double]
-  param(5.5D).as[CDT.Double].set(settable, 0)
-
-  column[Float](0).as[CDT.Float]
-  param(5.5F).as[CDT.Float].set(settable, 0)
-
-  column[Boolean](0).as[CDT.Boolean]
-  param(true).as[CDT.Boolean].set(settable, 0)
-
-  column[String](0).as[CDT.Ascii]
-  param("").as[CDT.Ascii].set(settable, 0)
-
-  column[String](0).as[CDT.Text]
-  param("").as[CDT.Text].set(settable, 0)
-
-  column[String](0).as[CDT.VarChar]
-  param("").as[CDT.VarChar].set(settable, 0)
-
-  column[Date](0).as[CDT.Timestamp]
-  param(new Date).as[CDT.Timestamp].set(settable, 0)
-
-  column[BigDecimal](0).as[CDT.Decimal]
-  param(BigDecimal.ZERO).as[CDT.Decimal].set(settable, 0)
-
-  column[InetAddress](0).as[CDT.Inet]
-  param(InetAddress.getLocalHost).as[CDT.Inet].set(settable, 0)
-
-  column[BigInteger](0).as[CDT.VarInt]
-  param(BigInteger.ZERO).as[CDT.VarInt].set(settable, 0)
-
-  column[ByteBuffer](0).as[CDT.Blob]
-  param(ByteBuffer.allocate(1)).as[CDT.Blob].set(settable, 0)
-
-  column[UUID](0).as[CDT.TimeUuid]
-  param(UUIDs.timeBased).as[CDT.TimeUuid].set(settable, 0)
-
-  column[UUID](0).as[CDT.Uuid]
-  param(UUID.randomUUID()).as[CDT.Uuid].set(settable, 0)
-
-  column[LocalDate](0).as[CDT.Date]
-  param(LocalDate.fromMillisSinceEpoch(0)).as[CDT.Date].set(settable, 0)
-
-  column[Seq[Int]](0).as[CDT.List[CDT.Int]]
-  param(Seq(55)).as[CDT.List[CDT.Int]].set(settable, 0)
-
-  column[Seq[Long]](0).as[CDT.List[CDT.BigInt]]
-  param(Seq(55555L)).as[CDT.List[CDT.BigInt]].set(settable, 0)
-
-  column[Seq[Long]](0).as[CDT.List[CDT.Counter]]
-  param(Seq(55555L)).as[CDT.List[CDT.Counter]].set(settable, 0)
-
-  column[Seq[Long]](0).as[CDT.List[CDT.Time]]
-  param(Seq(55555L)).as[CDT.List[CDT.Time]].set(settable, 0)
-
-  column[Seq[Short]](0).as[CDT.List[CDT.SmallInt]]
-  param(Seq(5.toShort)).as[CDT.List[CDT.SmallInt]].set(settable, 0)
-
-  column[Seq[Byte]](0).as[CDT.List[CDT.TinyInt]]
-  param(Seq(5.toByte)).as[CDT.List[CDT.TinyInt]].set(settable, 0)
-
-  column[Seq[Double]](0).as[CDT.List[CDT.Double]]
-  param(Seq(5.5D)).as[CDT.List[CDT.Double]].set(settable, 0)
-
-  column[Seq[Float]](0).as[CDT.List[CDT.Float]]
-  param(Seq(5.5F)).as[CDT.List[CDT.Float]].set(settable, 0)
-
-  column[Seq[Boolean]](0).as[CDT.List[CDT.Boolean]]
-  param(Seq(true)).as[CDT.List[CDT.Boolean]].set(settable, 0)
-
-  column[Seq[String]](0).as[CDT.List[CDT.Ascii]]
-  param(Seq("")).as[CDT.List[CDT.Ascii]].set(settable, 0)
-
-  column[Seq[String]](0).as[CDT.List[CDT.Text]]
-  param(Seq("")).as[CDT.List[CDT.Text]].set(settable, 0)
-
-  column[Seq[String]](0).as[CDT.List[CDT.VarChar]]
-  param(Seq("")).as[CDT.List[CDT.VarChar]].set(settable, 0)
-
-  column[Seq[Date]](0).as[CDT.List[CDT.Timestamp]]
-  param(Seq(new Date)).as[CDT.List[CDT.Timestamp]].set(settable, 0)
-
-  column[Seq[BigDecimal]](0).as[CDT.List[CDT.Decimal]]
-  param(Seq(BigDecimal.ZERO)).as[CDT.List[CDT.Decimal]].set(settable, 0)
-
-  column[Seq[InetAddress]](0).as[CDT.List[CDT.Inet]]
-  param(Seq(InetAddress.getLocalHost)).as[CDT.List[CDT.Inet]].set(settable, 0)
-
-  column[Seq[BigInteger]](0).as[CDT.List[CDT.VarInt]]
-  param(Seq(BigInteger.ZERO)).as[CDT.List[CDT.VarInt]].set(settable, 0)
-
-  column[Seq[ByteBuffer]](0).as[CDT.List[CDT.Blob]]
-  param(Seq(ByteBuffer.allocate(1))).as[CDT.List[CDT.Blob]].set(settable, 0)
-
-  column[Seq[UUID]](0).as[CDT.List[CDT.TimeUuid]]
-  param(Seq(UUIDs.timeBased)).as[CDT.List[CDT.TimeUuid]].set(settable, 0)
-
-  column[Seq[UUID]](0).as[CDT.List[CDT.Uuid]]
-  param(Seq(UUID.randomUUID())).as[CDT.List[CDT.Uuid]].set(settable, 0)
-
-  column[Seq[LocalDate]](0).as[CDT.List[CDT.Date]]
-  param(Seq(LocalDate.fromMillisSinceEpoch(0))).as[CDT.List[CDT.Date]].set(settable, 0)
-
-  column[Set[Int]](0).as[CDT.Set[CDT.Int]]
-  param(Set(55)).as[CDT.Set[CDT.Int]].set(settable, 0)
-
-  column[Set[Long]](0).as[CDT.Set[CDT.BigInt]]
-  param(Set(55555L)).as[CDT.Set[CDT.BigInt]].set(settable, 0)
-
-  column[Set[Long]](0).as[CDT.Set[CDT.Counter]]
-  param(Set(55555L)).as[CDT.Set[CDT.Counter]].set(settable, 0)
-
-  column[Set[Long]](0).as[CDT.Set[CDT.Time]]
-  param(Set(55555L)).as[CDT.Set[CDT.Time]].set(settable, 0)
-
-  column[Set[Short]](0).as[CDT.Set[CDT.SmallInt]]
-  param(Set(5.toShort)).as[CDT.Set[CDT.SmallInt]].set(settable, 0)
-
-  column[Set[Byte]](0).as[CDT.Set[CDT.TinyInt]]
-  param(Set(5.toByte)).as[CDT.Set[CDT.TinyInt]].set(settable, 0)
-
-  column[Set[Double]](0).as[CDT.Set[CDT.Double]]
-  param(Set(5.5D)).as[CDT.Set[CDT.Double]].set(settable, 0)
-
-  column[Set[Float]](0).as[CDT.Set[CDT.Float]]
-  param(Set(5.5F)).as[CDT.Set[CDT.Float]].set(settable, 0)
-
-  column[Set[Boolean]](0).as[CDT.Set[CDT.Boolean]]
-  param(Set(true)).as[CDT.Set[CDT.Boolean]].set(settable, 0)
-
-  column[Set[String]](0).as[CDT.Set[CDT.Ascii]]
-  param(Set("")).as[CDT.Set[CDT.Ascii]].set(settable, 0)
-
-  column[Set[String]](0).as[CDT.Set[CDT.Text]]
-  param(Set("")).as[CDT.Set[CDT.Text]].set(settable, 0)
-
-  column[Set[String]](0).as[CDT.Set[CDT.VarChar]]
-  param(Set("")).as[CDT.Set[CDT.VarChar]].set(settable, 0)
-
-  column[Set[Date]](0).as[CDT.Set[CDT.Timestamp]]
-  param(Set(new Date)).as[CDT.Set[CDT.Timestamp]].set(settable, 0)
-
-  column[Set[BigDecimal]](0).as[CDT.Set[CDT.Decimal]]
-  param(Set(BigDecimal.ZERO)).as[CDT.Set[CDT.Decimal]].set(settable, 0)
-
-  column[Set[InetAddress]](0).as[CDT.Set[CDT.Inet]]
-  param(Set(InetAddress.getLocalHost)).as[CDT.Set[CDT.Inet]].set(settable, 0)
-
-  column[Set[BigInteger]](0).as[CDT.Set[CDT.VarInt]]
-  param(Set(BigInteger.ZERO)).as[CDT.Set[CDT.VarInt]].set(settable, 0)
-
-  column[Set[ByteBuffer]](0).as[CDT.Set[CDT.Blob]]
-  param(Set(ByteBuffer.allocate(1))).as[CDT.Set[CDT.Blob]].set(settable, 0)
-
-  column[Set[UUID]](0).as[CDT.Set[CDT.TimeUuid]]
-  param(Set(UUIDs.timeBased)).as[CDT.Set[CDT.TimeUuid]].set(settable, 0)
-
-  column[Set[UUID]](0).as[CDT.Set[CDT.Uuid]]
-  param(Set(UUID.randomUUID())).as[CDT.Set[CDT.Uuid]].set(settable, 0)
-
-  column[Set[LocalDate]](0).as[CDT.Set[CDT.Date]]
-  param(Set(LocalDate.fromMillisSinceEpoch(0))).as[CDT.Set[CDT.Date]].set(settable, 0)
-
-  column[Map[Int, Int]](0).as[CDT.Map[CDT.Int, CDT.Int]]
-  param(Map(55 -> 55)).as[CDT.Map[CDT.Int, CDT.Int]].set(settable, 0)
-
-  column[Map[Long, Long]](0).as[CDT.Map[CDT.BigInt, CDT.BigInt]]
-  param(Map(55555L -> 55555L)).as[CDT.Map[CDT.BigInt, CDT.BigInt]].set(settable, 0)
-
-  column[Map[Long, Long]](0).as[CDT.Map[CDT.Counter, CDT.Counter]]
-  param(Map(55555L -> 55555L)).as[CDT.Map[CDT.Counter, CDT.Counter]].set(settable, 0)
-
-  column[Map[Long, Long]](0).as[CDT.Map[CDT.Time, CDT.Time]]
-  param(Map(55555L -> 55555L)).as[CDT.Map[CDT.Time, CDT.Time]].set(settable, 0)
-
-  column[Map[Short, Short]](0).as[CDT.Map[CDT.SmallInt, CDT.SmallInt]]
-  param(Map(5.toShort -> 5.toShort)).as[CDT.Map[CDT.SmallInt, CDT.SmallInt]].set(settable, 0)
-
-  column[Map[Byte, Byte]](0).as[CDT.Map[CDT.TinyInt, CDT.TinyInt]]
-  param(Map(5.toByte -> 5.toByte)).as[CDT.Map[CDT.TinyInt, CDT.TinyInt]].set(settable, 0)
-
-  column[Map[Double, Double]](0).as[CDT.Map[CDT.Double, CDT.Double]]
-  param(Map(5.5D -> 5.5D)).as[CDT.Map[CDT.Double, CDT.Double]].set(settable, 0)
-
-  column[Map[Float, Float]](0).as[CDT.Map[CDT.Float, CDT.Float]]
-  param(Map(5.5F -> 5.5F)).as[CDT.Map[CDT.Float, CDT.Float]].set(settable, 0)
-
-  column[Map[Boolean, Boolean]](0).as[CDT.Map[CDT.Boolean, CDT.Boolean]]
-  param(Map(true -> true)).as[CDT.Map[CDT.Boolean, CDT.Boolean]].set(settable, 0)
-
-  column[Map[String, String]](0).as[CDT.Map[CDT.Ascii, CDT.Ascii]]
-  param(Map("" -> "")).as[CDT.Map[CDT.Ascii, CDT.Ascii]].set(settable, 0)
-
-  column[Map[String, String]](0).as[CDT.Map[CDT.Text, CDT.Text]]
-  param(Map("" -> "")).as[CDT.Map[CDT.Text, CDT.Text]].set(settable, 0)
-
-  column[Map[String, String]](0).as[CDT.Map[CDT.VarChar, CDT.VarChar]]
-  param(Map("" -> "")).as[CDT.Map[CDT.VarChar, CDT.VarChar]].set(settable, 0)
-
-  column[Map[Date, Date]](0).as[CDT.Map[CDT.Timestamp, CDT.Timestamp]]
-  param(Map(new Date -> new Date)).as[CDT.Map[CDT.Timestamp, CDT.Timestamp]].set(settable, 0)
-
-  column[Map[BigDecimal, BigDecimal]](0).as[CDT.Map[CDT.Decimal, CDT.Decimal]]
-  param(Map(BigDecimal.ZERO -> BigDecimal.ZERO)).as[CDT.Map[CDT.Decimal, CDT.Decimal]].set(settable, 0)
-
-  column[Map[InetAddress, InetAddress]](0).as[CDT.Map[CDT.Inet, CDT.Inet]]
-  param(Map(InetAddress.getLocalHost -> InetAddress.getLocalHost)).as[CDT.Map[CDT.Inet, CDT.Inet]].set(settable, 0)
-
-  column[Map[BigInteger, BigInteger]](0).as[CDT.Map[CDT.VarInt, CDT.VarInt]]
-  param(Map(BigInteger.ZERO -> BigInteger.ZERO)).as[CDT.Map[CDT.VarInt, CDT.VarInt]].set(settable, 0)
-
-  column[Map[ByteBuffer, ByteBuffer]](0).as[CDT.Map[CDT.Blob, CDT.Blob]]
-  param(Map(ByteBuffer.allocate(1) -> ByteBuffer.allocate(1))).as[CDT.Map[CDT.Blob, CDT.Blob]].set(settable, 0)
-
-  column[Map[UUID, UUID]](0).as[CDT.Map[CDT.TimeUuid, CDT.TimeUuid]]
-  param(Map(UUIDs.timeBased -> UUIDs.timeBased)).as[CDT.Map[CDT.TimeUuid, CDT.TimeUuid]].set(settable, 0)
-
-  column[Map[UUID, UUID]](0).as[CDT.Map[CDT.Uuid, CDT.Uuid]]
-  param(Map(UUID.randomUUID() -> UUID.randomUUID())).as[CDT.Map[CDT.Uuid, CDT.Uuid]].set(settable, 0)
-
-  column[Map[LocalDate, LocalDate]](0).as[CDT.Map[CDT.Date, CDT.Date]]
-  param(Map(LocalDate.fromMillisSinceEpoch(0) -> LocalDate.fromMillisSinceEpoch(0))).as[CDT.Map[CDT.Date, CDT.Date]].set(settable, 0)
-
-  column[Map[Int, String]](0).as[CDT.Map[CDT.Int, CDT.Text]]
-  param(Map(55 -> "")).as[CDT.Map[CDT.Int, CDT.Text]].set(settable, 0)
-
-  column[Map[String, Int]](0).as[CDT.Map[CDT.Text, CDT.Int]]
-  param(Map("" -> 55)).as[CDT.Map[CDT.Text, CDT.Int]].set(settable, 0)
-
-  // TODO
-  //  column[TupleValue](0).as[CDT.Tuple]
-  //  param(???).as[CDT.Tuple].set(settable, 0)
-
-  //  column[UDTValue](0).as[CDT.User-defined types]
-  //  param(???).as[CDT.User-defined types].set(settable, 0)
-
+import org.mockito.Mockito._
+import org.mockito.Matchers._
+import scala.collection.JavaConverters._
+
+class CodecsSpec extends FreeSpec with MockitoSugar with MustMatchers {
+  implicit val gettable = mock[Row]
+
+  "InternalDSL Codecs when" - {
+
+    "Int <--> int" - {
+      type SType = Int
+      val value: SType = 55
+      type CType = CDT.Int
+      "get from Row" in {
+        when(gettable.getInt(0)).thenReturn(value)
+        column[SType](0).as[CType] mustBe value
+      }
+      "set into BoundStatement" in {
+        val settable = mock[BoundStatement]
+        param(value).as[CType].set(settable, 0)
+        verify(settable).setInt(0, value)
+      }
+    }
+
+    "Long <-->" - {
+      type SType = Long
+      val value: SType = 55555L
+
+      "BigInt" - {
+        type CType = CDT.BigInt
+        "get from Row" in {
+          when(gettable.getLong(0)).thenReturn(value)
+          column[SType](0).as[CType] mustBe value
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(value).as[CType].set(settable, 0)
+          verify(settable).setLong(0, value)
+        }
+      }
+      "Counter" - {
+        type CType = CDT.Counter
+        "get from Row" in {
+          when(gettable.getLong(0)).thenReturn(value)
+          column[SType](0).as[CType] mustBe value
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(value).as[CType].set(settable, 0)
+          verify(settable).setLong(0, value)
+        }
+      }
+      "Time" - {
+        type CType = CDT.Time
+        "get from Row" in {
+          when(gettable.getLong(0)).thenReturn(value)
+          column[SType](0).as[CType] mustBe value
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(value).as[CType].set(settable, 0)
+          verify(settable).setLong(0, value)
+        }
+      }
+    }
+
+    "Short <--> smallint" - {
+      type SType = Short
+      val value: SType = 5.toShort
+      type CType = CDT.SmallInt
+
+      "get from Row" in {
+        when(gettable.getShort(0)).thenReturn(value)
+        column[SType](0).as[CType] mustBe value
+      }
+      "set into BoundStatement" in {
+        val settable = mock[BoundStatement]
+        param(value).as[CType].set(settable, 0)
+        verify(settable).setShort(0, value)
+      }
+    }
+    "Byte <--> tinyint" - {
+      type SType = Byte
+      val value: SType = 5.toByte
+      type CType = CDT.TinyInt
+
+      "get from Row" in {
+        when(gettable.getByte(0)).thenReturn(value)
+        column[SType](0).as[CType] mustBe value
+      }
+      "set into BoundStatement" in {
+        val settable = mock[BoundStatement]
+        param(value).as[CType].set(settable, 0)
+        verify(settable).setByte(0, value)
+      }
+    }
+    "Double <--> double" - {
+      type SType = Double
+      val value: SType = 5.5D
+      type CType = CDT.Double
+
+      "get from Row" in {
+        when(gettable.getDouble(0)).thenReturn(value)
+        column[SType](0).as[CType] mustBe value
+      }
+      "set into BoundStatement" in {
+        val settable = mock[BoundStatement]
+        param(value).as[CType].set(settable, 0)
+        verify(settable).setDouble(0, value)
+      }
+    }
+    "Float <--> float" - {
+      type SType = Float
+      val value: SType = 5.5F
+      type CType = CDT.Float
+      "get from Row" in {
+        when(gettable.getFloat(0)).thenReturn(value)
+        column[SType](0).as[CType] mustBe value
+      }
+      "set into BoundStatement" in {
+        val settable = mock[BoundStatement]
+        param(value).as[CType].set(settable, 0)
+        verify(settable).setFloat(0, value)
+      }
+    }
+    "Boolean <--> boolean" - {
+      type SType = Boolean
+      val value: SType = true
+      type CType = CDT.Boolean
+      "get from Row" in {
+        when(gettable.getBool(0)).thenReturn(value)
+        column[SType](0).as[CType] mustBe value
+      }
+      "set into BoundStatement" in {
+        val settable = mock[BoundStatement]
+        param(value).as[CType].set(settable, 0)
+        verify(settable).setBool(0, value)
+      }
+    }
+    "String <--> ascii" - {
+      type SType = String
+      val value: SType = ""
+      type CType = CDT.Ascii
+      type TCodec = TypeCodec[SType]
+      "get from Row" in {
+        when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(value)
+        column[SType](0).as[CType] mustBe value
+      }
+      "set into BoundStatement" in {
+        val settable = mock[BoundStatement]
+        param(value).as[CType].set(settable, 0)
+        verify(settable).set(Matchers.eq(0), Matchers.eq(value), any[TCodec])
+      }
+    }
+    "String <--> text" - {
+      type SType = String
+      val value: SType = ""
+      type CType = CDT.Text
+      type TCodec = TypeCodec[SType]
+      "get from Row" in {
+        when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(value)
+        column[SType](0).as[CType] mustBe value
+      }
+      "set into BoundStatement" in {
+        val settable = mock[BoundStatement]
+        param(value).as[CType].set(settable, 0)
+        verify(settable).set(Matchers.eq(0), Matchers.eq(value), any[TCodec])
+      }
+    }
+    "String <--> varchar" - {
+      type SType = String
+      val value: SType = ""
+      type CType = CDT.VarChar
+      type TCodec = TypeCodec[SType]
+      "get from Row" in {
+        when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(value)
+        column[SType](0).as[CType] mustBe value
+      }
+      "set into BoundStatement" in {
+        val settable = mock[BoundStatement]
+        param(value).as[CType].set(settable, 0)
+        verify(settable).set(Matchers.eq(0), Matchers.eq(value), any[TCodec])
+      }
+    }
+    "Date <--> timestamp" - {
+      type SType = Date
+      val value: SType = new Date
+      type CType = CDT.Timestamp
+      type TCodec = TypeCodec[SType]
+      "get from Row" in {
+        when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(value)
+        column[SType](0).as[CType] mustBe value
+      }
+      "set into BoundStatement" in {
+        val settable = mock[BoundStatement]
+        param(value).as[CType].set(settable, 0)
+        verify(settable).set(Matchers.eq(0), Matchers.eq(value), any[TCodec])
+      }
+    }
+    "BigDecimal <--> decimal" - {
+      type SType = BigDecimal
+      val value: SType = BigDecimal.ZERO
+      type CType = CDT.Decimal
+      type TCodec = TypeCodec[SType]
+      "get from Row" in {
+        when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(value)
+        column[SType](0).as[CType] mustBe value
+      }
+      "set into BoundStatement" in {
+        val settable = mock[BoundStatement]
+        param(value).as[CType].set(settable, 0)
+        verify(settable).set(Matchers.eq(0), Matchers.eq(value), any[TCodec])
+      }
+    }
+    "InetAddress <--> inet" - {
+      type SType = InetAddress
+      val value: SType = InetAddress.getLocalHost
+      type CType = CDT.Inet
+      type TCodec = TypeCodec[SType]
+      "get from Row" in {
+        when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(value)
+        column[SType](0).as[CType] mustBe value
+      }
+      "set into BoundStatement" in {
+        val settable = mock[BoundStatement]
+        param(value).as[CType].set(settable, 0)
+        verify(settable).set(Matchers.eq(0), Matchers.eq(value), any[TCodec])
+      }
+    }
+    "BigInteger <--> varint" - {
+      type SType = BigInteger
+      val value: SType = BigInteger.ZERO
+      type CType = CDT.VarInt
+      type TCodec = TypeCodec[SType]
+      "get from Row" in {
+        when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(value)
+        column[SType](0).as[CType] mustBe value
+      }
+      "set into BoundStatement" in {
+        val settable = mock[BoundStatement]
+        param(value).as[CType].set(settable, 0)
+        verify(settable).set(Matchers.eq(0), Matchers.eq(value), any[TCodec])
+      }
+    }
+    "ByteBuffer <--> blob" - {
+      type SType = ByteBuffer
+      val value: SType = ByteBuffer.allocate(1)
+      type CType = CDT.Blob
+      type TCodec = TypeCodec[SType]
+      "get from Row" in {
+        when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(value)
+        column[SType](0).as[CType] mustBe value
+      }
+      "set into BoundStatement" in {
+        val settable = mock[BoundStatement]
+        param(value).as[CType].set(settable, 0)
+        verify(settable).set(Matchers.eq(0), Matchers.eq(value), any[TCodec])
+      }
+    }
+    "UUID <--> timeuuid" - {
+      type SType = UUID
+      val value: SType = UUIDs.timeBased
+      type CType = CDT.TimeUuid
+      type TCodec = TypeCodec[SType]
+      "get from Row" in {
+        when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(value)
+        column[SType](0).as[CType] mustBe value
+      }
+      "set into BoundStatement" in {
+        val settable = mock[BoundStatement]
+        param(value).as[CType].set(settable, 0)
+        verify(settable).set(Matchers.eq(0), Matchers.eq(value), any[TCodec])
+      }
+    }
+    "UUID <--> uuid" - {
+      type SType = UUID
+      val value: SType = UUID.randomUUID()
+      type CType = CDT.Uuid
+      type TCodec = TypeCodec[SType]
+      "get from Row" in {
+        when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(value)
+        column[SType](0).as[CType] mustBe value
+      }
+      "set into BoundStatement" in {
+        val settable = mock[BoundStatement]
+        param(value).as[CType].set(settable, 0)
+        verify(settable).set(Matchers.eq(0), Matchers.eq(value), any[TCodec])
+      }
+    }
+    "LocalDate <--> .date" - {
+      type SType = LocalDate
+      val value: SType = LocalDate.fromMillisSinceEpoch(0)
+      type CType = CDT.Date
+      type TCodec = TypeCodec[SType]
+      "get from Row" in {
+        when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(value)
+        column[SType](0).as[CType] mustBe value
+      }
+      "set into BoundStatement" in {
+        val settable = mock[BoundStatement]
+        param(value).as[CType].set(settable, 0)
+        verify(settable).set(Matchers.eq(0), Matchers.eq(value), any[TCodec])
+      }
+    }
+
+    "Seq" - {
+      "[Int] <--> list<int>" - {
+        type SType = Seq[Int]
+        type JType = java.util.List[Int]
+        val sValue: SType = Seq(55)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.List[CDT.Int]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[Long] <--> list" - {
+        type SType = Seq[Long]
+        type JType = java.util.List[Long]
+        val sValue: SType = Seq(55555L)
+        val jValue: JType = sValue.asJava
+        type TCodec = TypeCodec[JType]
+
+        "<bigint>" - {
+          type CType = CDT.List[CDT.BigInt]
+
+          "get from Row" in {
+            when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+            verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+          }
+        }
+        "<counter>" - {
+          type CType = CDT.List[CDT.Counter]
+
+          "get from Row" in {
+            when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+            verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+          }
+        }
+        "<time>" - {
+          type CType = CDT.List[CDT.Time]
+          "get from Row" in {
+            when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+            verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+          }
+        }
+      }
+      "[Short] <--> list<smallint>" - {
+        type SType = Seq[Short]
+        type JType = java.util.List[Short]
+        val sValue: SType = Seq(5.toShort)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.List[CDT.SmallInt]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[Byte] <--> list<tinyint>" - {
+        type SType = Seq[Byte]
+        type JType = java.util.List[Byte]
+        val sValue: SType = Seq(5.toByte)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.List[CDT.TinyInt]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[Double] <--> list<double>" - {
+        type SType = Seq[Double]
+        type JType = java.util.List[Double]
+        val sValue: SType = Seq(5.5D)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.List[CDT.Double]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[Float] <--> list<float>" - {
+        type SType = Seq[Float]
+        type JType = java.util.List[Float]
+        val sValue: SType = Seq(5.5F)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.List[CDT.Float]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[Boolean] <--> list<boolean>" - {
+        type SType = Seq[Boolean]
+        type JType = java.util.List[Boolean]
+        val sValue: SType = Seq(true)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.List[CDT.Boolean]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[String] <--> list" - {
+        type SType = Seq[String]
+        type JType = java.util.List[String]
+        val sValue: SType = Seq("")
+        val jValue: JType = sValue.asJava
+        type TCodec = TypeCodec[JType]
+        "<ascii>" - {
+          type CType = CDT.List[CDT.Ascii]
+          "get from Row" in {
+            when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+            verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+          }
+        }
+        "<text>" - {
+          type CType = CDT.List[CDT.Text]
+          "get from Row" in {
+            when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+            verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+          }
+        }
+        "<varchar>" - {
+          type CType = CDT.List[CDT.VarChar]
+          "get from Row" in {
+            when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+            verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+          }
+        }
+      }
+      "[Date] <--> list<timestamp>" - {
+        type SType = Seq[Date]
+        type JType = java.util.List[Date]
+        val sValue: SType = Seq(new Date)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.List[CDT.Timestamp]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[BigDecimal] <--> list<decimal>" - {
+        type SType = Seq[BigDecimal]
+        type JType = java.util.List[BigDecimal]
+        val sValue: SType = Seq(BigDecimal.ZERO)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.List[CDT.Decimal]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[InetAddress] <--> list<inet>" - {
+        type SType = Seq[InetAddress]
+        type JType = java.util.List[InetAddress]
+        val sValue: SType = Seq(InetAddress.getLocalHost)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.List[CDT.Inet]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[BigInteger] <--> list<varint>" - {
+        type SType = Seq[BigInteger]
+        type JType = java.util.List[BigInteger]
+        val sValue: SType = Seq(BigInteger.ZERO)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.List[CDT.VarInt]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[ByteBuffer] <--> list<blob>" - {
+        type SType = Seq[ByteBuffer]
+        type JType = java.util.List[ByteBuffer]
+        val sValue: SType = Seq(ByteBuffer.allocate(1))
+        val jValue: JType = sValue.asJava
+        type CType = CDT.List[CDT.Blob]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[UUID] <--> list" - {
+        type SType = Seq[UUID]
+        type JType = java.util.List[UUID]
+        val sValue: SType = Seq(UUIDs.timeBased)
+        val jValue: JType = sValue.asJava
+        type TCodec = TypeCodec[JType]
+        "<timeuuid>" - {
+          type CType = CDT.List[CDT.TimeUuid]
+          "get from Row" in {
+            when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+            verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+          }
+        }
+        "<uuid>" - {
+          type CType = CDT.List[CDT.Uuid]
+          "get from Row" in {
+            when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+            verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+          }
+        }
+      }
+
+      "LocalDate <--> list<date>" - {
+        type SType = Seq[LocalDate]
+        type JType = java.util.List[LocalDate]
+        val sValue: SType = Seq(LocalDate.fromMillisSinceEpoch(0))
+        val jValue: JType = sValue.asJava
+        type CType = CDT.List[CDT.Date]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+    }
+    "Set" - {
+      "[Int] <--> set<int>" - {
+        type SType = Set[Int]
+        type JType = java.util.Set[Int]
+        val sValue: SType = Set(55)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.Set[CDT.Int]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[Long] <--> set" - {
+        type SType = Set[Long]
+        type JType = java.util.Set[Long]
+        val sValue: SType = Set(55555L)
+        val jValue: JType = sValue.asJava
+        type TCodec = TypeCodec[JType]
+        "<bigint>" - {
+          type CType = CDT.Set[CDT.BigInt]
+          "get from Row" in {
+            when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+            verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+          }
+        }
+        "<counter>" - {
+          type CType = CDT.Set[CDT.Counter]
+          "get from Row" in {
+            when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+            verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+          }
+        }
+        "<time>" - {
+          type CType = CDT.Set[CDT.Time]
+          "get from Row" in {
+            when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+            verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+          }
+        }
+      }
+      "[Short] <--> set<smallint>" - {
+        type SType = Set[Short]
+        type JType = java.util.Set[Short]
+        val sValue: SType = Set(5.toShort)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.Set[CDT.SmallInt]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[Byte] <--> set<tinyint>" - {
+        type SType = Set[Byte]
+        type JType = java.util.Set[Byte]
+        val sValue: SType = Set(5.toByte)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.Set[CDT.TinyInt]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[Double] <--> set<double>" - {
+        type SType = Set[Double]
+        type JType = java.util.Set[Double]
+        val sValue: SType = Set(5.5D)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.Set[CDT.Double]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[Float] <--> set<float>" - {
+        type SType = Set[Float]
+        type JType = java.util.Set[Float]
+        val sValue: SType = Set(5.5F)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.Set[CDT.Float]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[Boolean] <--> set<boolean>" - {
+        type SType = Set[Boolean]
+        type JType = java.util.Set[Boolean]
+        val sValue: SType = Set(true)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.Set[CDT.Boolean]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[String] <--> set" - {
+        type SType = Set[String]
+        type JType = java.util.Set[String]
+        val sValue: SType = Set("")
+        val jValue: JType = sValue.asJava
+        type TCodec = TypeCodec[JType]
+        "<ascii>" - {
+          type CType = CDT.Set[CDT.Ascii]
+          "get from Row" in {
+            when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+            verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+          }
+        }
+        "<text>" - {
+          type CType = CDT.Set[CDT.Text]
+          "get from Row" in {
+            when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+            verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+          }
+        }
+        "<varchar>" - {
+          type CType = CDT.Set[CDT.VarChar]
+          "get from Row" in {
+            when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+            verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+          }
+        }
+      }
+      "[Date] <--> set<timestamp>" - {
+        type SType = Set[Date]
+        type JType = java.util.Set[Date]
+        val sValue: SType = Set(new Date)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.Set[CDT.Timestamp]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[BigDecimal] <--> set<decimal>" - {
+        type SType = Set[BigDecimal]
+        type JType = java.util.Set[BigDecimal]
+        val sValue: SType = Set(BigDecimal.ZERO)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.Set[CDT.Decimal]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[InetAddress] <--> set<inet>" - {
+        type SType = Set[InetAddress]
+        type JType = java.util.Set[InetAddress]
+        val sValue: SType = Set(InetAddress.getLocalHost)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.Set[CDT.Inet]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[BigInteger] <--> set<varint>" - {
+        type SType = Set[BigInteger]
+        type JType = java.util.Set[BigInteger]
+        val sValue: SType = Set(BigInteger.ZERO)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.Set[CDT.VarInt]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[ByteBuffer] <--> set<blob>" - {
+        type SType = Set[ByteBuffer]
+        type JType = java.util.Set[ByteBuffer]
+        val sValue: SType = Set(ByteBuffer.allocate(1))
+        val jValue: JType = sValue.asJava
+        type CType = CDT.Set[CDT.Blob]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[UUID] <--> set" - {
+        type SType = Set[UUID]
+        type JType = java.util.Set[UUID]
+        val sValue: SType = Set(UUIDs.timeBased)
+        val jValue: JType = sValue.asJava
+        type TCodec = TypeCodec[JType]
+        "<timeuuid>" - {
+          type CType = CDT.Set[CDT.TimeUuid]
+          "get from Row" in {
+            when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+            verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+          }
+        }
+        "<uuid>" - {
+          type CType = CDT.Set[CDT.Uuid]
+          "get from Row" in {
+            when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+            verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+          }
+        }
+      }
+      "[LocalDate] <--> set<date>" - {
+        type SType = Set[LocalDate]
+        type JType = java.util.Set[LocalDate]
+        val sValue: SType = Set(LocalDate.fromMillisSinceEpoch(0))
+        val jValue: JType = sValue.asJava
+        type CType = CDT.Set[CDT.Date]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+    }
+    "Map" - {
+      "[Int, Int] <--> map<int, int>" - {
+        type SType = Map[Int, Int]
+        type JType = java.util.Map[Int, Int]
+        val sValue: SType = Map(55 -> 55)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.Map[CDT.Int, CDT.Int]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[Long, Long] <--> map" - {
+        type SType = Map[Long, Long]
+        type JType = java.util.Map[Long, Long]
+        val sValue: SType = Map(55555L -> 55555L)
+        val jValue: JType = sValue.asJava
+        type TCodec = TypeCodec[JType]
+        "<bigint, bigint>" - {
+          type CType = CDT.Map[CDT.BigInt, CDT.BigInt]
+          "get from Row" in {
+            when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+            verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+          }
+        }
+        "<counter, counter>" - {
+          type CType = CDT.Map[CDT.Counter, CDT.Counter]
+          "get from Row" in {
+            when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+            verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+          }
+        }
+        "map<time, time>" - {
+          type CType = CDT.Map[CDT.Time, CDT.Time]
+          "get from Row" in {
+            when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+            verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+          }
+        }
+      }
+      "[Short, Short] <--> map<smallint, smallint>" - {
+        type SType = Map[Short, Short]
+        type JType = java.util.Map[Short, Short]
+        val sValue: SType = Map(5.toShort -> 5.toShort)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.Map[CDT.SmallInt, CDT.SmallInt]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[Byte, Byte] <--> map<tinyint, tinyint>" - {
+        type SType = Map[Byte, Byte]
+        type JType = java.util.Map[Byte, Byte]
+        val sValue: SType = Map(5.toByte -> 5.toByte)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.Map[CDT.TinyInt, CDT.TinyInt]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[Double, Double] <--> map<double, double>" - {
+        type SType = Map[Double, Double]
+        type JType = java.util.Map[Double, Double]
+        val sValue: SType = Map(5.5D -> 5.5D)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.Map[CDT.Double, CDT.Double]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[Float, Float] <--> map<float, float>" - {
+        type SType = Map[Float, Float]
+        type JType = java.util.Map[Float, Float]
+        val sValue: SType = Map(5.5F -> 5.5F)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.Map[CDT.Float, CDT.Float]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[Boolean, Boolean] <--> map<boolean, boolean>" - {
+        type SType = Map[Boolean, Boolean]
+        type JType = java.util.Map[Boolean, Boolean]
+        val sValue: SType = Map(true -> true)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.Map[CDT.Boolean, CDT.Boolean]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[String, String] <--> map" - {
+        type SType = Map[String, String]
+        type JType = java.util.Map[String, String]
+        val sValue: SType = Map("" -> "")
+        val jValue: JType = sValue.asJava
+        type TCodec = TypeCodec[JType]
+        "<ascii, ascii>" - {
+          type CType = CDT.Map[CDT.Ascii, CDT.Ascii]
+          "get from Row" in {
+            when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+            verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+          }
+        }
+        "map<text, text>" - {
+          type CType = CDT.Map[CDT.Text, CDT.Text]
+          "get from Row" in {
+            when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+            verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+          }
+        }
+        "[String, String] <--> map<varchar, varchar>" - {
+          type CType = CDT.Map[CDT.VarChar, CDT.VarChar]
+          "get from Row" in {
+            when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+            verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+          }
+        }
+      }
+      "[Date, Date] <--> map<timestamp, timestamp>" - {
+        type SType = Map[Date, Date]
+        type JType = java.util.Map[Date, Date]
+        val sValue: SType = Map(new Date -> new Date)
+        val jValue: JType = sValue.asJava
+        type TCodec = TypeCodec[JType]
+        type CType = CDT.Map[CDT.Timestamp, CDT.Timestamp]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[BigDecimal, BigDecimal] <--> map<decimal, decimal>" - {
+        type SType = Map[BigDecimal, BigDecimal]
+        type JType = java.util.Map[BigDecimal, BigDecimal]
+        val sValue: SType = Map(BigDecimal.ZERO -> BigDecimal.ZERO)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.Map[CDT.Decimal, CDT.Decimal]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[InetAddress, InetAddress] <--> map<inet, inet>" - {
+        type SType = Map[InetAddress, InetAddress]
+        type JType = java.util.Map[InetAddress, InetAddress]
+        val sValue: SType = Map(InetAddress.getLocalHost -> InetAddress.getLocalHost)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.Map[CDT.Inet, CDT.Inet]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[BigInteger, BigInteger] <--> map<varint, varint>" - {
+        type SType = Map[BigInteger, BigInteger]
+        type JType = java.util.Map[BigInteger, BigInteger]
+        val sValue: SType = Map(BigInteger.ZERO -> BigInteger.ZERO)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.Map[CDT.VarInt, CDT.VarInt]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[ByteBuffer, ByteBuffer] <--> map<blob, blob>" - {
+        type SType = Map[ByteBuffer, ByteBuffer]
+        type JType = java.util.Map[ByteBuffer, ByteBuffer]
+        val sValue: SType = Map(ByteBuffer.allocate(1) -> ByteBuffer.allocate(1))
+        val jValue: JType = sValue.asJava
+        type CType = CDT.Map[CDT.Blob, CDT.Blob]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[UUID, UUID] <--> map" - {
+        type SType = Map[UUID, UUID]
+        type JType = java.util.Map[UUID, UUID]
+        val sValue: SType = Map(UUIDs.timeBased -> UUIDs.timeBased)
+        val jValue: JType = sValue.asJava
+        type TCodec = TypeCodec[JType]
+        "<timeuuid, timeuuid>" - {
+          type CType = CDT.Map[CDT.TimeUuid, CDT.TimeUuid]
+          "get from Row" in {
+            when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+            verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+          }
+        }
+        "<uuid, uuid>" - {
+          type CType = CDT.Map[CDT.Uuid, CDT.Uuid]
+          "get from Row" in {
+            when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+            column[SType](0).as[CType] mustBe sValue
+          }
+          "set into BoundStatement" in {
+            val settable = mock[BoundStatement]
+            param(sValue).as[CType].set(settable, 0)
+            verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+          }
+        }
+      }
+      "[LocalDate, LocalDate] <--> map<date, date>" - {
+        type SType = Map[LocalDate, LocalDate]
+        type JType = java.util.Map[LocalDate, LocalDate]
+        val sValue: SType = Map(LocalDate.fromMillisSinceEpoch(0) -> LocalDate.fromMillisSinceEpoch(0))
+        val jValue: JType = sValue.asJava
+        type CType = CDT.Map[CDT.Date, CDT.Date]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[Int, String] <--> map<int, text>" - {
+        type SType = Map[Int, String]
+        type JType = java.util.Map[Int, String]
+        val sValue: SType = Map(55 -> "")
+        val jValue: JType = sValue.asJava
+        type CType = CDT.Map[CDT.Int, CDT.Text]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+      "[String, Int] <--> map<text, int>" - {
+        type SType = Map[String, Int]
+        type JType = java.util.Map[String, Int]
+        val sValue: SType = Map("" -> 55)
+        val jValue: JType = sValue.asJava
+        type CType = CDT.Map[CDT.Text, CDT.Int]
+        type TCodec = TypeCodec[JType]
+        "get from Row" in {
+          when(gettable.get(Matchers.eq(0), any[TCodec])).thenReturn(jValue)
+          column[SType](0).as[CType] mustBe sValue
+        }
+        "set into BoundStatement" in {
+          val settable = mock[BoundStatement]
+          param(sValue).as[CType].set(settable, 0)
+          verify(settable).set(Matchers.eq(0), Matchers.eq(jValue), any[TCodec])
+        }
+      }
+    }
+    // TODO: Tuple & UDT
+  }
 }

@@ -66,6 +66,16 @@ class UpdateSpec extends FlatSpec with Matchers {
     variableTypes(0) shouldBe DataType.Uuid
   }
 
+  it should "update statement with variables in using, set and where clause" in {
+    val statement = parse("UPDATE test.posts USING TTL ? SET post_title = ? WHERE author_id = ?; ")
+    val (rowType, variableTypes) = schema(statement).get
+    rowType.asInstanceOf[SchemaEngine.Columns].types.isEmpty shouldBe true
+    variableTypes.size shouldBe 3
+    variableTypes(0) shouldBe DataType.Int
+    variableTypes(1) shouldBe DataType.Text
+    variableTypes(2) shouldBe DataType.Uuid
+  }
+
   it should "update statement with variables in updateParam and where clause" in {
     val statement = parse("UPDATE test.posts USING TTL ? SET post_title = 'Testing' WHERE author_id = ?; ")
     val (rowType, variableTypes) = schema(statement).get

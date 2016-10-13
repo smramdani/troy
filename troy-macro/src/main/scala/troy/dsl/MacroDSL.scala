@@ -2,7 +2,7 @@ package troy.dsl
 
 import com.datastax.driver.core._
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.Future
 
 object MacroDSL {
   trait TroyCql {

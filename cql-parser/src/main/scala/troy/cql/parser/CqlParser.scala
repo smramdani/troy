@@ -42,43 +42,9 @@ object CqlParser extends JavaTokenParsers
   def dataDefinition: Parser[DataDefinition] =
     createKeyspace | createTable | createIndex | alterTableStatement
 
-  def alterKeyspace: Parser[Cql3Statement] = ??? // <create-keyspace-stmt> ::= ALTER KEYSPACE <identifier> WITH <properties>
-
-  def dropKeyspace: Parser[Cql3Statement] = ??? // <drop-keyspace-stmt> ::= DROP KEYSPACE ( IF EXISTS )? <identifier>
-
   ///////////////////////////////////// Data Manipulation
   def dmlDefinition: Parser[DataManipulation] =
     selectStatement | insertStatement | deleteStatement | updateStatement // batchStatement | truncateStatement
-
-  def batchStatement: Parser[Cql3Statement] = ???
-
-  def truncateStatement: Parser[Cql3Statement] = ???
-
-  //  def schemaChangeStatement: Parser[Cql3Statement] =
-  //    createKeyspaceStatement | createColumnFamilyStatement | createIndexStatement | dropKeyspaceStatement |
-  //      dropColumnFamilyStatement | dropIndexStatement | alterTableStatement
-
-  def createColumnFamilyStatement: Parser[Cql3Statement] = ???
-
-  def createIndexStatement: Parser[Cql3Statement] = ???
-
-  def dropKeyspaceStatement: Parser[Cql3Statement] = ???
-
-  def dropColumnFamilyStatement: Parser[Cql3Statement] = ???
-
-  def dropIndexStatement: Parser[Cql3Statement] = ???
-
-  def usingConsistencyLevelClause: Parser[ConsistencyLevel] = {
-    def consistencyLevel = any | one | quorum | all | localQuorum | eachQuorum
-    def any = "quorum".i ^^^ ConsistencyLevel.Any
-    def one = "quorum".i ^^^ ConsistencyLevel.One
-    def quorum = "quorum".i ^^^ ConsistencyLevel.Quorum
-    def all = "quorum".i ^^^ ConsistencyLevel.All
-    def localQuorum = "quorum".i ^^^ ConsistencyLevel.LocalQuorum
-    def eachQuorum = "quorum".i ^^^ ConsistencyLevel.EachQuorum
-
-    "using".i ~> "consistency".i ~> consistencyLevel
-  }
 
   def semicolon: Parser[Unit] = ";".? ^^^ ((): Unit)
 
@@ -116,8 +82,6 @@ object CqlParser extends JavaTokenParsers
   }
 
   def keyspaceName: Parser[KeyspaceName] = identifier ^^ KeyspaceName
-
-  def positiveNumber = """([1-9]+)""".r
 
   /*
    * <tablename> ::= (<identifier> '.')? <identifier>

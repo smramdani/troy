@@ -4,7 +4,7 @@ import scala.annotation.compileTimeOnly
 
 trait ParsingOps {
   type ParseAs[R]
-
+  // $COVERAGE-OFF$
   @compileTimeOnly("as can be called only inside troy.dsl.withSchema block")
   def as[R](mapper: () => R): ParseAs[R] = ???
   // (1 to 22).map(1 to _).map(_.map(i => s"T$i").mkString(", ")).map(tstr => s"def as[$tstr, R](mapper: ($tstr) => R): MacroDSL[M[R]]").foreach(println)
@@ -52,4 +52,5 @@ trait ParsingOps {
   def as[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, R](mapper: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21) => R): ParseAs[R] = ???
   @compileTimeOnly("as can be called only inside troy.dsl.withSchema block")
   def as[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22, R](mapper: (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20, T21, T22) => R): ParseAs[R] = ???
+  // $COVERAGE-ON$
 }

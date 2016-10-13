@@ -10,6 +10,7 @@ object Version {
 object Library {
   val scalaCheck = "org.scalacheck" %% "scalacheck" % Version.ScalaCheck
   val scalaTest = "org.scalatest" %% "scalatest" % Version.ScalaTest
+  val mockito = "org.mockito" % "mockito-core" % "1.10.19"
   val scalaReflect = "org.scala-lang" % "scala-reflect" % Version.Scala
   val scalaParserCombinators = "org.scala-lang.modules" %% "scala-parser-combinators" % Version.ScalaParserCombinators
   val cassandraDriverCore = "com.datastax.cassandra"  % "cassandra-driver-core" % "3.0.0"

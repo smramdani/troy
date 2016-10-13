@@ -36,39 +36,38 @@ class withSchema extends scala.annotation.StaticAnnotation {
     }
 
     def translateCollectionColumnType(typ: DataType) = {
-      val cdt = q"CassandraDataType"
       def translate(t: DataType) = translateNativeColumnType(t)
       typ match {
-        case DataType.List(t) => t"CassandraDataType.List[${translate(t)}]"
-        case DataType.Set(t) => t"CassandraDataType.Set[${translate(t)}]"
-        case DataType.Map(k, v) => t"CassandraDataType.Map[${translate(k)}, ${translate(v)}]"
-        //      case DataType.Tuple(ts: Seq[DataType]) => t"CassandraDataType."
-        //      case DataType.Custom(javaClass: String) => t"CassandraDataType."
+        case DataType.List(t) => t"CDT.List[${translate(t)}]"
+        case DataType.Set(t) => t"CDT.Set[${translate(t)}]"
+        case DataType.Map(k, v) => t"CDT.Map[${translate(k)}, ${translate(v)}]"
+        //      case DataType.Tuple(ts: Seq[DataType]) => t"CDT."
+        //      case DataType.Custom(javaClass: String) => t"CDT."
       }
     }
 
     def translateNativeColumnType(typ: DataType) =
     typ match {
-      case DataType.Ascii => t"CassandraDataType.Ascii"
-      case DataType.BigInt => t"CassandraDataType.BigInt"
-      case DataType.Blob => t"CassandraDataType.Blob"
-      case DataType.Boolean => t"CassandraDataType.Boolean"
-      case DataType.Counter => t"CassandraDataType.Counter"
-      case DataType.Date => t"CassandraDataType.Date"
-      case DataType.Decimal => t"CassandraDataType.Decimal"
-      case DataType.Double => t"CassandraDataType.Double"
-      case DataType.Float => t"CassandraDataType.Float"
-      case DataType.Inet => t"CassandraDataType.Inet"
-      case DataType.Int => t"CassandraDataType.Int"
-      case DataType.Smallint => t"CassandraDataType.SmallInt"
-      case DataType.Text => t"CassandraDataType.Text"
-      case DataType.Time => t"CassandraDataType.Time"
-      case DataType.Timestamp => t"CassandraDataType.Timestamp"
-      case DataType.Timeuuid => t"CassandraDataType.TimeUuid"
-      case DataType.Tinyint => t"CassandraDataType.TinyInt"
-      case DataType.Uuid => t"CassandraDataType.Uuid"
-      case DataType.Varchar => t"CassandraDataType.VarChar"
-      case DataType.Varint => t"CassandraDataType.VarInt"
+      case DataType.Ascii => t"CDT.Ascii"
+      case DataType.BigInt => t"CDT.BigInt"
+      case DataType.Blob => t"CDT.Blob"
+      case DataType.Boolean => t"CDT.Boolean"
+      case DataType.Counter => t"CDT.Counter"
+      case DataType.Date => t"CDT.Date"
+      case DataType.Decimal => t"CDT.Decimal"
+      case DataType.Double => t"CDT.Double"
+      case DataType.Float => t"CDT.Float"
+      case DataType.Inet => t"CDT.Inet"
+      case DataType.Int => t"CDT.Int"
+      case DataType.Smallint => t"CDT.SmallInt"
+      case DataType.Text => t"CDT.Text"
+      case DataType.Time => t"CDT.Time"
+      case DataType.Timestamp => t"CDT.Timestamp"
+      case DataType.Timeuuid => t"CDT.TimeUuid"
+      case DataType.Tinyint => t"CDT.TinyInt"
+      case DataType.Uuid => t"CDT.Uuid"
+      case DataType.Varchar => t"CDT.VarChar"
+      case DataType.Varint => t"CDT.VarInt"
     }
 
     def parseSchemaFromFileName(path: String) =
@@ -185,10 +184,9 @@ class withSchema extends scala.annotation.StaticAnnotation {
     }
 
     val imports = Seq(
-      q"import _root_.troy.meta.InternalDsl._",
-      q"import _root_.troy.driver.CassandraDataType",
-      q"import _root_.troy.driver.codecs.HasTypeCodec._",
-      q"import _root_.troy.meta.codecs.Primitives._")
+      q"import _root_.troy.driver.InternalDsl._",
+      q"import _root_.troy.driver.codecs.PrimitivesCodecs._"
+    )
 
     val stats = imports ++ Seq(parser, replacedExpr)
     log(q"""

@@ -7,8 +7,8 @@ import scala.concurrent.{ ExecutionContext, Future }
 object MacroDSL {
   trait TroyCql {
     def prepared: Statement
-    def preparedAync: Future[Statement]
-    def unprepared: Statement
+    //    def preparedAsync: Future[Statement]
+    //    def unprepared: Statement
   }
 
   trait DslBoundStatement extends ParsingOps {

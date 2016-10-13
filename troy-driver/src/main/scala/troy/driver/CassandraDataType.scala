@@ -31,7 +31,7 @@ object CassandraDataType {
   trait Collection extends CassandraDataType
   final class List[T <: Native] private () extends Collection
   final class Set[T <: Native] private () extends Collection
-  final class Map[T <: Native, V <: Native] private () extends Collection
+  final class Map[K <: Native, V <: Native] private () extends Collection
 
   //  final class Tuple(ts: Seq[DataType]) extends DataType
   //  final class Custom(javaClass: String) extends DataType

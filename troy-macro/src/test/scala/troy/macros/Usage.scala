@@ -101,25 +101,35 @@ class Usage extends CassandraSpec {
     createPost(AuthorAndPost(UUID.randomUUID(), UUID.randomUUID(), "Author", Some(5), Some("Title"))).get shouldBe true
   }
 
-  // TODO: https://github.com/tabdulradi/troy/issues/34
-  //  it should "support Update" in {
-  //    val setTitle = withSchema { (oldTitle: String, newTitle: String) =>
-  //      cql"""
-  //        UPDATE test1.posts
-  //        SET title=$oldTitle
-  //        If title=$newTitle;
-  //      """.prepared.executeAsync
-  //    }
-  //    setTitle("test", "not test anymore")
-  //
-  //    val addTag = withSchema { (newTag: String) =>
-  //      cql"""
-  //        UPDATE test1.posts
-  //        SET tags= tags + {$newTag};
-  //      """.prepared.executeAsync
-  //    }
-  //    addTag("")
-  //  }
+  //   TODO: https://github.com/tabdulradi/troy/issues/34
+  it should "support Update" in {
+    val setTitle = withSchema { (authId: UUID, postId: UUID, newTitle: String) =>
+      cql"""
+          UPDATE test.posts
+          SET post_title=$newTitle
+          WHERE author_id=$authId and post_id=$postId;
+        """.prepared.executeAsync
+    }
+    setTitle(UUID.randomUUID(), UUID.randomUUID(), "not test anymore")
+
+    val setRating = withSchema { (authId: UUID, id: UUID, title: String, rating: Int) =>
+      cql"""
+          UPDATE test.post_details
+          SET rating = $rating
+          WHERE author_id=$authId and id=$id IF title=$title;
+        """.prepared.executeAsync
+    }
+    setRating(UUID.randomUUID(), UUID.randomUUID(), "test", 5)
+
+    val addTag = withSchema { (authId: UUID, id: UUID, newTag: Set[String]) =>
+      cql"""
+          UPDATE test.post_details
+          SET tags= tags + $newTag
+          WHERE author_id=$authId and id=$id;
+        """.prepared.executeAsync
+    }
+    addTag(UUID.randomUUID(), UUID.randomUUID(), Set("test"))
+  }
 
   // TODO: https://github.com/tabdulradi/troy/issues/33
   //

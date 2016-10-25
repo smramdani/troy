@@ -2,8 +2,6 @@ package demo1
 
 import com.datastax.driver.core.{Cluster, Session}
 import troy.dsl._
-import troy.driver.DSL._
-import scala.concurrent.ExecutionContext.Implicits.global
 
 object Main extends App {
   val port: Int = 9042
@@ -20,11 +18,11 @@ object Main extends App {
          SELECT post_id, post_title
          FROM test.posts
          WHERE author_id = $authorId
-       """.prepared.executeAsync
+       """.prepared
   }
 
 
-  println(listByAuthor("test"))
+  println(session.execute(listByAuthor("test")))
 
   session.close()
   cluster.close()

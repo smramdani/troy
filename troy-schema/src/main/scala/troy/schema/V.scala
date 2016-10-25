@@ -12,6 +12,7 @@ sealed trait V[+W, +E, +S] extends Product with Serializable { self =>
   @inline def map[SS](f: S => SS): V[W, E, SS]
   @inline def collect[EE >: E, SS](default: => EE)(pf: PartialFunction[S, SS]): V[W, EE, SS]
   @inline def addWarns[WW >: W](ws2: Iterable[WW]): V[WW, E, S]
+  @inline def fallbackTo[WW >: W, EE >: E, SS >: S](that: => V[WW, EE, SS]): V[WW, EE, SS]
   @inline def withDefaultError[EE >: E](error: => EE) = new WithDefaultError(error)
   @inline def |?|[EE >: E](error: => EE) = withDefaultError(error)
 
@@ -46,6 +47,9 @@ object V {
 
     @inline override def addWarns[WW >: W](ws2: Iterable[WW]): V[WW, Nothing, S] =
       copy(ws = ws ++ ws2)
+
+    @inline override def fallbackTo[WW >: W, EE, SS >: S](that: => V[WW, EE, SS]): this.type =
+      this
   }
 
   final case class Error[+W, +E](es: Seq[E], ws: Seq[W] = Seq.empty) extends V[W, E, Nothing] {
@@ -60,6 +64,9 @@ object V {
 
     @inline override def addWarns[WW >: W](ws2: Iterable[WW]): V[WW, E, Nothing] =
       copy(ws = ws ++ ws2)
+
+    @inline override def fallbackTo[WW >: W, EE, SS](that: => V[WW, EE, SS]): V[WW, EE, SS] =
+      that
   }
 
   def success[W, S](s: S, ws: W*) =
